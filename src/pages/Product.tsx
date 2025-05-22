@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { products } from '../data/products';
 import MainLayout from '../components/Layout/MainLayout';
 import { Button } from '../components/ui/button';
@@ -14,6 +14,7 @@ import { ShoppingCart } from 'lucide-react';
 
 const Product: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(1);
@@ -33,6 +34,12 @@ const Product: React.FC = () => {
       </MainLayout>
     );
   }
+
+  // Find next and previous product IDs
+  const productIds = products.map(p => p.id);
+  const currentIndex = productIds.indexOf(Number(id));
+  const nextProductId = currentIndex < productIds.length - 1 ? productIds[currentIndex + 1] : null;
+  const prevProductId = currentIndex > 0 ? productIds[currentIndex - 1] : null;
 
   // Mock data for product variants
   const chainVariants = [
@@ -71,6 +78,18 @@ const Product: React.FC = () => {
     
     for (let i = 0; i < quantity; i++) {
       addToCart(productWithVariant);
+    }
+  };
+
+  const goToNextProduct = () => {
+    if (nextProductId) {
+      navigate(`/product/${nextProductId}`);
+    }
+  };
+
+  const goToPrevProduct = () => {
+    if (prevProductId) {
+      navigate(`/product/${prevProductId}`);
     }
   };
   
@@ -153,11 +172,10 @@ const Product: React.FC = () => {
               <Button 
                 variant="secondary"
                 className="flex-1 py-6 text-sage-700"
-                asChild
+                onClick={nextProductId ? goToNextProduct : undefined}
+                disabled={!nextProductId}
               >
-                <Link to={product.category ? `/category/${product.category}` : "/shop"}>
-                  NEXT TAB
-                </Link>
+                NEXT TAB
               </Button>
               
               <Button 
