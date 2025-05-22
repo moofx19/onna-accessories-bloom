@@ -1,14 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, Search } from 'lucide-react';
+import { ShoppingBag, Menu, X, User } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useCart } from '../../context/CartContext';
+import SearchDialog from '../SearchDialog';
+import SearchInput from '../SearchInput';
+import { useWindowSize } from '../../hooks/use-mobile';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { openCart, getCartCount } = useCart();
+  const { width } = useWindowSize();
+  const isMobile = width < 768;
   
   // Effect to handle scroll behavior
   useEffect(() => {
@@ -59,9 +64,15 @@ const Navbar: React.FC = () => {
 
         {/* Action Icons */}
         <div className="flex items-center space-x-4">
-          <button className="text-sage-700 hover:text-sage-500">
-            <Search className="h-5 w-5" />
-          </button>
+          {/* Search - Dialog on mobile, inline on desktop */}
+          {isMobile ? (
+            <SearchDialog />
+          ) : (
+            <div className="hidden md:block w-56">
+              <SearchInput isCompact={true} />
+            </div>
+          )}
+          
           <button className="text-sage-700 hover:text-sage-500">
             <User className="h-5 w-5" />
           </button>
@@ -128,10 +139,17 @@ const Navbar: React.FC = () => {
             </Link>
             <Link 
               to="/hot-deals" 
-              className="py-3 text-rose-500 hover:text-rose-600"
+              className="py-3 text-rose-500 hover:text-rose-600 border-b border-gray-100"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Hot Deals
+            </Link>
+            <Link 
+              to="/search" 
+              className="py-3 text-sage-700 hover:text-sage-500"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Search
             </Link>
           </div>
         </div>
