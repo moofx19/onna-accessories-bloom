@@ -10,7 +10,7 @@ import ProductImageCarousel from '../components/ProductImageCarousel';
 import ProductVariantSelector from '../components/ProductVariantSelector';
 import QuantitySelector from '../components/QuantitySelector';
 import ProductTabNavigation from '../components/ProductTabNavigation';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, ArrowLeft } from 'lucide-react';
 
 const Product: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -115,11 +115,11 @@ const Product: React.FC = () => {
             <div className="flex items-center mb-6">
               {product.salePrice ? (
                 <>
-                  <span className="font-medium text-2xl text-rose-500">${product.salePrice.toFixed(2)}</span>
-                  <span className="ml-3 text-lg text-gray-500 line-through">${product.price.toFixed(2)}</span>
+                  <span className="font-medium text-2xl text-rose-500">EGP {product.salePrice.toFixed(2)}</span>
+                  <span className="ml-3 text-lg text-gray-500 line-through">EGP {product.price.toFixed(2)}</span>
                 </>
               ) : (
-                <span className="font-medium text-2xl text-gray-900">${product.price.toFixed(2)}</span>
+                <span className="font-medium text-2xl text-gray-900">EGP {product.price.toFixed(2)}</span>
               )}
             </div>
             
@@ -163,20 +163,31 @@ const Product: React.FC = () => {
                   onIncrease={() => setQuantity(prev => prev + 1)}
                   onDecrease={() => setQuantity(prev => (prev > 1 ? prev - 1 : 1))}
                 />
-                <span className="font-medium text-lg text-gray-900">${totalPrice.toFixed(2)}</span>
+                <span className="font-medium text-lg text-gray-900">EGP {totalPrice.toFixed(2)}</span>
               </div>
             </div>
             
             {/* Action buttons */}
             <div className="flex gap-4 mt-8">
-              <Button 
-                variant="secondary"
-                className="flex-1 py-6 text-sage-700"
-                onClick={nextProductId ? goToNextProduct : undefined}
-                disabled={!nextProductId}
-              >
-                NEXT TAB
-              </Button>
+              {prevProductId ? (
+                <Button 
+                  variant="secondary"
+                  className="flex-1 py-6 text-sage-700"
+                  onClick={goToPrevProduct}
+                >
+                  <ArrowLeft className="mr-2 h-5 w-5" />
+                  PREV TAB
+                </Button>
+              ) : (
+                <Button 
+                  variant="secondary"
+                  className="flex-1 py-6 text-sage-700"
+                  disabled
+                >
+                  <ArrowLeft className="mr-2 h-5 w-5" />
+                  PREV TAB
+                </Button>
+              )}
               
               <Button 
                 onClick={handleAddToCart}
@@ -200,7 +211,7 @@ const Product: React.FC = () => {
             
             {/* Shipping info */}
             <div className="text-sm text-gray-600 border-t border-gray-200 pt-6 mt-6 space-y-2">
-              <p>Free shipping on orders over $50</p>
+              <p>Free shipping on orders over EGP 50</p>
               <p>30-day return policy</p>
             </div>
           </div>
