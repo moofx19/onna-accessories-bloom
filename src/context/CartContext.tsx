@@ -44,21 +44,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = (product: Product) => {
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
+      const existingItem = prevItems.find(item => 
+        item.id === product.id && 
+        item.variant === product.variant &&
+        item.charms === product.charms
+      );
       
       if (existingItem) {
+        const charmText = product.charms ? ` with ${product.charms} charms` : '';
         toast('Item quantity updated', {
-          description: `${product.name} quantity increased to ${existingItem.quantity + 1}`,
+          description: `${product.name}${charmText} quantity increased to ${existingItem.quantity + 1}`,
         });
         
         return prevItems.map(item => 
-          item.id === product.id 
+          item.id === product.id && 
+          item.variant === product.variant &&
+          item.charms === product.charms
             ? { ...item, quantity: item.quantity + 1 } 
             : item
         );
       } else {
+        const charmText = product.charms ? ` with ${product.charms} charms` : '';
         toast('Item added to cart', {
-          description: `${product.name} has been added to your cart`,
+          description: `${product.name}${charmText} has been added to your cart`,
         });
         
         return [...prevItems, { ...product, quantity: 1 }];

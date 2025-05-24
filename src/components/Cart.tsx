@@ -61,7 +61,7 @@ const Cart: React.FC = () => {
           ) : (
             <>
               {cartItems.map((item) => (
-                <div key={item.id} className="py-4 border-b border-gray-200 flex">
+                <div key={`${item.id}-${item.variant || 'default'}-${item.charms || 0}`} className="py-4 border-b border-gray-200 flex">
                   {/* Product image */}
                   <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-md mr-4">
                     <img 
@@ -74,14 +74,24 @@ const Cart: React.FC = () => {
                   {/* Product details */}
                   <div className="flex-1">
                     <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
+                    
+                    {/* Variant and charms info */}
+                    {(item.variant || item.charms) && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {item.variant && <span>{item.variant}</span>}
+                        {item.variant && item.charms && <span> • </span>}
+                        {item.charms && <span>{item.charms} charms</span>}
+                      </div>
+                    )}
+                    
                     <div className="flex items-center mt-1">
                       {item.salePrice ? (
                         <>
-                          <span className="text-sm font-medium text-rose-500">${item.salePrice.toFixed(2)}</span>
-                          <span className="ml-2 text-xs text-gray-500 line-through">${item.price.toFixed(2)}</span>
+                          <span className="text-sm font-medium text-rose-500">EGP {item.salePrice.toFixed(2)}</span>
+                          <span className="ml-2 text-xs text-gray-500 line-through">EGP {item.price.toFixed(2)}</span>
                         </>
                       ) : (
-                        <span className="text-sm font-medium text-gray-900">${item.price.toFixed(2)}</span>
+                        <span className="text-sm font-medium text-gray-900">EGP {item.price.toFixed(2)}</span>
                       )}
                     </div>
                     
@@ -135,7 +145,7 @@ const Cart: React.FC = () => {
           <div className="p-4 border-t border-gray-200">
             <div className="flex justify-between mb-4">
               <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium text-gray-900">${getCartTotal().toFixed(2)}</span>
+              <span className="font-medium text-gray-900">EGP {getCartTotal().toFixed(2)}</span>
             </div>
             <p className="text-sm text-gray-500 mb-4">
               Shipping and taxes calculated at checkout

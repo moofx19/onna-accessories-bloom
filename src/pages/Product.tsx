@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import ProductImageCarousel from '../components/ProductImageCarousel';
-import ProductVariantSelector from '../components/ProductVariantSelector';
+import CharmSelector from '../components/CharmSelector';
 import QuantitySelector from '../components/QuantitySelector';
 import ProductTabNavigation from '../components/ProductTabNavigation';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
@@ -17,7 +17,7 @@ const Product: React.FC = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariant, setSelectedVariant] = useState(1);
+  const [selectedCharms, setSelectedCharms] = useState<number[]>([]);
   
   const product = products.find(p => p.id === Number(id));
   
@@ -41,55 +41,41 @@ const Product: React.FC = () => {
   const nextProductId = currentIndex < productIds.length - 1 ? productIds[currentIndex + 1] : null;
   const prevProductId = currentIndex > 0 ? productIds[currentIndex - 1] : null;
 
-  // Mock data for product variants
-  const chainVariants = [
-    { id: 1, name: "Standard Chain", imageUrl: product.imageUrl, priceAdjustment: 0 },
-    { id: 2, name: "Thin Chain", imageUrl: product.imageUrl, priceAdjustment: 10 },
-    { id: 3, name: "Thick Chain", imageUrl: product.imageUrl, priceAdjustment: 20 },
-    { id: 4, name: "Rope Chain", imageUrl: product.imageUrl, priceAdjustment: 15 },
-    { id: 5, name: "Box Chain", imageUrl: product.imageUrl, priceAdjustment: 25 }
-  ];
-
-  // Create a mock array of product images for the carousel
-  const productImages = [product.imageUrl];
-  if (product.category === "necklaces" || product.category === "earrings") {
-    // Add additional mock images for certain categories
-    productImages.push(product.imageUrl);
-  }
-  
   // Get related products (same category, exclude current product)
   const relatedProducts = products
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 3);
 
-  // Calculate price including variant adjustment
-  const selectedVariantData = chainVariants.find(v => v.id === selectedVariant);
-  const variantPriceAdjustment = selectedVariantData ? selectedVariantData.priceAdjustment : 0;
+  // Calculate total price including selected charms
   const basePrice = product.salePrice || product.price;
-  const totalPrice = (basePrice + variantPriceAdjustment) * quantity;
+  const charmsPrice = selectedCharms.length * 50; // Each charm costs EGP 50
+  const totalPrice = (basePrice + charmsPrice) * quantity;
   
   const handleAddToCart = () => {
-    const productWithVariant = {
+    const productWithCharms = {
       ...product,
-      price: product.price + variantPriceAdjustment,
-      salePrice: product.salePrice ? product.salePrice + variantPriceAdjustment : undefined,
-      variant: selectedVariantData?.name
+      price: product.price + charmsPrice,
+      salePrice: product.salePrice ? product.salePrice + charmsPrice : undefined,
+      charms: selectedCharms.length,
+      charmsDetails: selectedCharms
     };
     
     for (let i = 0; i < quantity; i++) {
-      addToCart(productWithVariant);
+      addToCart(productWithCharms);
     }
   };
 
   const goToNextProduct = () => {
     if (nextProductId) {
       navigate(`/product/${nextProductId}`);
+      setSelectedCharms([]); // Reset charms when changing products
     }
   };
 
   const goToPrevProduct = () => {
     if (prevProductId) {
       navigate(`/product/${prevProductId}`);
+      setSelectedCharms([]); // Reset charms when changing products
     }
   };
   
@@ -103,7 +89,7 @@ const Product: React.FC = () => {
           {/* Product image carousel */}
           <div className="md:w-1/2 mb-8 md:mb-0">
             <div className="sticky top-24">
-              <ProductImageCarousel images={productImages} />
+              <ProductImageCarousel images={[product.imageUrl]} />
             </div>
           </div>
           
@@ -115,11 +101,11 @@ const Product: React.FC = () => {
             <div className="flex items-center mb-6">
               {product.salePrice ? (
                 <>
-                  <span className="font-medium text-2xl text-rose-500">EGP {product.salePrice.toFixed(2)}</span>
-                  <span className="ml-3 text-lg text-gray-500 line-through">EGP {product.price.toFixed(2)}</span>
+                  <span className="font-medium text-2xl text-rose-500">EGP {(product.salePrice + charmsPrice).toFixed(2)}</span>
+                  <span className="ml-3 text-lg text-gray-500 line-through">EGP {(product.price + charmsPrice).toFixed(2)}</span>
                 </>
               ) : (
-                <span className="font-medium text-2xl text-gray-900">EGP {product.price.toFixed(2)}</span>
+                <span className="font-medium text-2xl text-gray-900">EGP {(product.price + charmsPrice).toFixed(2)}</span>
               )}
             </div>
             
@@ -141,17 +127,16 @@ const Product: React.FC = () => {
             <div className="text-gray-600 mb-8">
               <p>
                 This elegant {product.name.toLowerCase()} is a timeless addition to your jewelry collection.
-                Handcrafted with care, this piece can elevate any outfit from casual to formal.
-                Its simple yet sophisticated design makes it perfect for everyday wear or special occasions.
+                Customize it with beautiful charms to make it uniquely yours. Each charm tells a story and adds
+                personal meaning to your jewelry piece.
               </p>
             </div>
             
-            {/* Customization options */}
-            <ProductVariantSelector
-              options={chainVariants}
-              selectedVariantId={selectedVariant}
-              onSelectVariant={setSelectedVariant}
-              title="SELECT THE CHAINS"
+            {/* Charm Selector */}
+            <CharmSelector
+              selectedCharms={selectedCharms}
+              onCharmsChange={setSelectedCharms}
+              maxCharms={5}
             />
             
             {/* Quantity selector */}
@@ -211,8 +196,9 @@ const Product: React.FC = () => {
             
             {/* Shipping info */}
             <div className="text-sm text-gray-600 border-t border-gray-200 pt-6 mt-6 space-y-2">
-              <p>Free shipping on orders over EGP 50</p>
+              <p>Free shipping on orders over EGP 500</p>
               <p>30-day return policy</p>
+              <p>Handcrafted with love in Egypt</p>
             </div>
           </div>
         </div>
