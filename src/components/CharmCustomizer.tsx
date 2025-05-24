@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Stage, Layer, Image as KonvaImage, Circle, Text } from 'react-konva';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, RotateCcw } from 'lucide-react';
-import useImage from 'use-image';
+import useImage from '../hooks/useImage';
 
 interface Charm {
   id: string;
@@ -48,9 +47,9 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
   const [previewCharms, setPreviewCharms] = useState<{ [key: string]: string }>({});
   
   // Load base necklace image
-  const [baseImage] = useImage(baseNecklaceImage);
+  const [baseImage, baseImageStatus] = useImage(baseNecklaceImage);
   
-  // Mock charm data with positions for preview
+  // Mock charm data with positions for preview (percentages for responsive positioning)
   const charmData: CharmCategories = {
     symbols: [
       {
@@ -59,7 +58,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'symbols',
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
         price: 75,
-        position: { x: 200, y: 120 }
+        position: { x: 50, y: 40 } // Center position
       },
       {
         id: 'star',
@@ -67,7 +66,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'symbols',
         imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=60&h=60&fit=crop',
         price: 75,
-        position: { x: 160, y: 140 }
+        position: { x: 35, y: 50 } // Left position
       },
       {
         id: 'moon',
@@ -75,7 +74,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'symbols',
         imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
         price: 75,
-        position: { x: 240, y: 140 }
+        position: { x: 65, y: 50 } // Right position
       }
     ],
     initials: [
@@ -85,7 +84,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'initials',
         imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
         price: 65,
-        position: { x: 180, y: 160 }
+        position: { x: 40, y: 60 }
       },
       {
         id: 'letter-b',
@@ -93,7 +92,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'initials',
         imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=60&h=60&fit=crop',
         price: 65,
-        position: { x: 220, y: 160 }
+        position: { x: 60, y: 60 }
       }
     ],
     zodiac: [
@@ -103,7 +102,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'zodiac',
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
         price: 85,
-        position: { x: 140, y: 120 }
+        position: { x: 30, y: 35 }
       },
       {
         id: 'taurus',
@@ -111,7 +110,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'zodiac',
         imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
         price: 85,
-        position: { x: 260, y: 120 }
+        position: { x: 70, y: 35 }
       }
     ],
     birthstones: [
@@ -121,7 +120,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'birthstones',
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
         price: 95,
-        position: { x: 200, y: 180 }
+        position: { x: 50, y: 65 }
       }
     ]
   };
@@ -134,18 +133,24 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
   ];
 
   const CharmPreviewImage: React.FC<{ charm: Charm }> = ({ charm }) => {
-    const [charmImage] = useImage(charm.imageUrl);
+    const [charmImage, charmImageStatus] = useImage(charm.imageUrl);
+    
+    if (charmImageStatus !== 'loaded' || !charmImage) return null;
     
     return (
-      <KonvaImage
-        image={charmImage}
-        x={charm.position.x}
-        y={charm.position.y}
-        width={40}
-        height={40}
-        offsetX={20}
-        offsetY={20}
-      />
+      <div
+        className="absolute transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-white shadow-lg z-10"
+        style={{
+          left: `${charm.position.x}%`,
+          top: `${charm.position.y}%`
+        }}
+      >
+        <img 
+          src={charm.imageUrl} 
+          alt={charm.name}
+          className="w-full h-full object-cover"
+        />
+      </div>
     );
   };
 
@@ -246,24 +251,26 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
       <div className="mb-8">
         <h3 className="text-lg font-semibold mb-4 text-center">Live Preview</h3>
         <div className="flex justify-center">
-          <div className="relative bg-gray-50 rounded-lg p-4">
-            <Stage width={400} height={300}>
-              <Layer>
-                {/* Base necklace */}
-                {baseImage && (
-                  <KonvaImage
-                    image={baseImage}
-                    width={400}
-                    height={300}
-                  />
-                )}
-                
-                {/* Preview charms - only latest per category */}
-                {getPreviewCharmsData().map((charm) => (
-                  charm && <CharmPreviewImage key={`preview-${charm.id}`} charm={charm} />
-                ))}
-              </Layer>
-            </Stage>
+          <div className="relative bg-gray-50 rounded-lg p-4 max-w-md">
+            <div className="relative w-full aspect-square max-w-sm mx-auto">
+              {/* Base necklace */}
+              {baseImageStatus === 'loaded' && baseImage ? (
+                <img 
+                  src={baseNecklaceImage} 
+                  alt="Base necklace"
+                  className="w-full h-full object-contain rounded-lg"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                  <span className="text-gray-400">Loading...</span>
+                </div>
+              )}
+              
+              {/* Preview charms - only latest per category */}
+              {getPreviewCharmsData().map((charm) => (
+                charm && <CharmPreviewImage key={`preview-${charm.id}`} charm={charm} />
+              ))}
+            </div>
             
             {/* Preview summary */}
             <div className="mt-4 text-center">
