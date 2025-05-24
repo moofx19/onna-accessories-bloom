@@ -5,6 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { X, RotateCcw } from 'lucide-react';
 import useImage from '../hooks/useImage';
 
+interface BaseProduct {
+  id: string;
+  name: string;
+  imageUrl: string;
+  price: number;
+  type: 'gold' | 'silver' | 'rose-gold';
+}
+
 interface Charm {
   id: string;
   name: string;
@@ -12,10 +20,7 @@ interface Charm {
   imageUrl: string;
   price: number;
   position: { x: number; y: number };
-}
-
-interface CharmCategories {
-  [key: string]: Charm[];
+  compatibleBases: string[]; // Which base products this charm works with
 }
 
 interface SelectedCharms {
@@ -26,16 +31,15 @@ interface SelectedCharms {
 }
 
 interface CharmCustomizerProps {
-  baseNecklaceImage: string;
-  onCharmsChange: (charms: SelectedCharms, totalPrice: number) => void;
+  onCustomizationChange: (baseProduct: BaseProduct | null, charms: SelectedCharms, totalPrice: number) => void;
   maxCharmsPerCategory?: number;
 }
 
 const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
-  baseNecklaceImage,
-  onCharmsChange,
+  onCustomizationChange,
   maxCharmsPerCategory = 3
 }) => {
+  const [selectedBase, setSelectedBase] = useState<BaseProduct | null>(null);
   const [selectedCharms, setSelectedCharms] = useState<SelectedCharms>({
     zodiac: [],
     initials: [],
@@ -47,10 +51,35 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
   const [previewCharms, setPreviewCharms] = useState<{ [key: string]: string }>({});
   
   // Load base necklace image
-  const [baseImage, baseImageStatus] = useImage(baseNecklaceImage);
+  const [baseImage, baseImageStatus] = useImage(selectedBase?.imageUrl || '');
   
-  // Mock charm data with positions for preview (percentages for responsive positioning)
-  const charmData: CharmCategories = {
+  // Base product options
+  const baseProducts: BaseProduct[] = [
+    {
+      id: 'gold-chain',
+      name: 'Gold Chain Necklace',
+      imageUrl: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      price: 450,
+      type: 'gold'
+    },
+    {
+      id: 'silver-chain',
+      name: 'Silver Chain Necklace',
+      imageUrl: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      price: 350,
+      type: 'silver'
+    },
+    {
+      id: 'rose-gold-chain',
+      name: 'Rose Gold Chain Necklace',
+      imageUrl: 'https://images.unsplash.com/photo-1612903252418-ac93af19963d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      price: 500,
+      type: 'rose-gold'
+    }
+  ];
+
+  // Charm data with base compatibility
+  const charmData: { [key: string]: Charm[] } = {
     symbols: [
       {
         id: 'heart',
@@ -58,7 +87,8 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'symbols',
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
         price: 75,
-        position: { x: 50, y: 40 } // Center position
+        position: { x: 50, y: 40 },
+        compatibleBases: ['gold-chain', 'silver-chain', 'rose-gold-chain']
       },
       {
         id: 'star',
@@ -66,7 +96,8 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'symbols',
         imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=60&h=60&fit=crop',
         price: 75,
-        position: { x: 35, y: 50 } // Left position
+        position: { x: 35, y: 50 },
+        compatibleBases: ['gold-chain', 'silver-chain']
       },
       {
         id: 'moon',
@@ -74,7 +105,8 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'symbols',
         imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
         price: 75,
-        position: { x: 65, y: 50 } // Right position
+        position: { x: 65, y: 50 },
+        compatibleBases: ['gold-chain', 'rose-gold-chain']
       }
     ],
     initials: [
@@ -84,7 +116,8 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'initials',
         imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
         price: 65,
-        position: { x: 40, y: 60 }
+        position: { x: 40, y: 60 },
+        compatibleBases: ['gold-chain', 'silver-chain', 'rose-gold-chain']
       },
       {
         id: 'letter-b',
@@ -92,7 +125,8 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'initials',
         imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=60&h=60&fit=crop',
         price: 65,
-        position: { x: 60, y: 60 }
+        position: { x: 60, y: 60 },
+        compatibleBases: ['gold-chain', 'silver-chain']
       }
     ],
     zodiac: [
@@ -102,7 +136,8 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'zodiac',
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
         price: 85,
-        position: { x: 30, y: 35 }
+        position: { x: 30, y: 35 },
+        compatibleBases: ['gold-chain', 'rose-gold-chain']
       },
       {
         id: 'taurus',
@@ -110,7 +145,8 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'zodiac',
         imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
         price: 85,
-        position: { x: 70, y: 35 }
+        position: { x: 70, y: 35 },
+        compatibleBases: ['silver-chain', 'gold-chain']
       }
     ],
     birthstones: [
@@ -120,7 +156,8 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'birthstones',
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
         price: 95,
-        position: { x: 50, y: 65 }
+        position: { x: 50, y: 65 },
+        compatibleBases: ['gold-chain', 'silver-chain', 'rose-gold-chain']
       }
     ]
   };
@@ -154,7 +191,23 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
     );
   };
 
+  const selectBase = (base: BaseProduct) => {
+    setSelectedBase(base);
+    // Clear charms when changing base
+    setSelectedCharms({
+      zodiac: [],
+      initials: [],
+      symbols: [],
+      birthstones: []
+    });
+    setPreviewCharms({});
+  };
+
   const selectCharm = (charm: Charm) => {
+    if (!selectedBase || !charm.compatibleBases.includes(selectedBase.id)) {
+      return; // Charm not compatible with selected base
+    }
+
     const category = charm.category;
     const currentSelected = selectedCharms[category];
     
@@ -220,7 +273,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
   };
 
   const getTotalPrice = () => {
-    let total = 0;
+    let total = selectedBase ? selectedBase.price : 0;
     Object.entries(selectedCharms).forEach(([category, charmIds]) => {
       charmIds.forEach(charmId => {
         const charm = charmData[category]?.find(c => c.id === charmId);
@@ -240,192 +293,246 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
     }).filter(Boolean);
   };
 
+  const getCompatibleCharms = () => {
+    if (!selectedBase) return [];
+    return charmData[activeCategory]?.filter(charm => 
+      charm.compatibleBases.includes(selectedBase.id)
+    ) || [];
+  };
+
   // Notify parent component of changes
   useEffect(() => {
-    onCharmsChange(selectedCharms, getTotalPrice());
-  }, [selectedCharms]);
+    onCustomizationChange(selectedBase, selectedCharms, getTotalPrice());
+  }, [selectedBase, selectedCharms]);
 
   return (
-    <div className="w-full">
-      {/* Live Preview */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold mb-4 text-center">Live Preview</h3>
-        <div className="flex justify-center">
-          <div className="relative bg-gray-50 rounded-lg p-4 max-w-md">
-            <div className="relative w-full aspect-square max-w-sm mx-auto">
-              {/* Base necklace */}
-              {baseImageStatus === 'loaded' && baseImage ? (
-                <img 
-                  src={baseNecklaceImage} 
-                  alt="Base necklace"
-                  className="w-full h-full object-contain rounded-lg"
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-400">Loading...</span>
-                </div>
-              )}
-              
-              {/* Preview charms - only latest per category */}
-              {getPreviewCharmsData().map((charm) => (
-                charm && <CharmPreviewImage key={`preview-${charm.id}`} charm={charm} />
-              ))}
-            </div>
-            
-            {/* Preview summary */}
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">
-                Showing {Object.keys(previewCharms).length} charm{Object.keys(previewCharms).length !== 1 ? 's' : ''} 
-                {getTotalCharmCount() > Object.keys(previewCharms).length && (
-                  <span className="text-sage-600 ml-1">
-                    ({getTotalCharmCount() - Object.keys(previewCharms).length} more in cart)
-                  </span>
-                )}
+    <div className="flex flex-col lg:flex-row gap-8 min-h-screen">
+      {/* Always-Visible Live Preview - Left Side */}
+      <div className="lg:w-1/2 lg:sticky lg:top-24 lg:h-fit">
+        <div className="bg-gray-50 rounded-lg p-6">
+          <h3 className="text-xl font-semibold mb-4 text-center">Live Preview</h3>
+          
+          {!selectedBase ? (
+            <div className="aspect-square max-w-md mx-auto bg-gray-200 rounded-lg flex items-center justify-center">
+              <p className="text-gray-500 text-center">
+                Select a base necklace to start customizing
               </p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Selected Charms Summary */}
-      {getTotalCharmCount() > 0 && (
-        <div className="mb-6 p-4 bg-sage-50 rounded-lg">
-          <div className="flex justify-between items-center mb-3">
-            <h4 className="font-semibold text-sage-800">Selected Charms ({getTotalCharmCount()})</h4>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={clearAllCharms}
-              className="text-rose-600 border-rose-300 hover:bg-rose-50"
-            >
-              <RotateCcw className="w-4 h-4 mr-1" />
-              Clear All
-            </Button>
-          </div>
-          
-          {Object.entries(selectedCharms).map(([category, charmIds]) => (
-            charmIds.length > 0 && (
-              <div key={category} className="mb-2">
-                <span className="text-sm font-medium capitalize text-gray-700">{category}: </span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {charmIds.map(charmId => {
-                    const charm = charmData[category]?.find(c => c.id === charmId);
-                    const isInPreview = previewCharms[category] === charmId;
-                    return charm ? (
-                      <Badge 
-                        key={charmId} 
-                        variant="secondary"
-                        className={`text-xs ${isInPreview ? 'bg-sage-200 text-sage-800' : 'bg-gray-200 text-gray-700'}`}
-                      >
-                        {charm.name} +EGP {charm.price}
-                        {isInPreview && <span className="ml-1 text-sage-600">👁</span>}
-                        <button
-                          onClick={() => removeCharmFromCategory(category, charmId)}
-                          className="ml-1 text-rose-500 hover:text-rose-700"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ) : null;
-                  })}
-                </div>
-              </div>
-            )
-          ))}
-          
-          <div className="mt-3 pt-3 border-t border-sage-200">
-            <p className="font-semibold text-sage-800">
-              Total Charms Cost: +EGP {getTotalPrice().toFixed(2)}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Category Navigation */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {categories.map(category => (
-          <Button
-            key={category.id}
-            variant={activeCategory === category.id ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveCategory(category.id)}
-            className={activeCategory === category.id ? 'bg-sage-500 hover:bg-sage-600' : ''}
-          >
-            {category.name}
-            {selectedCharms[category.id].length > 0 && (
-              <Badge variant="secondary" className="ml-2 text-xs">
-                {selectedCharms[category.id].length}
-              </Badge>
-            )}
-          </Button>
-        ))}
-      </div>
-
-      {/* Charm Selection Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {charmData[activeCategory]?.map((charm) => {
-          const isSelected = selectedCharms[charm.category].includes(charm.id);
-          const isInPreview = previewCharms[charm.category] === charm.id;
-          const canSelect = selectedCharms[charm.category].length < maxCharmsPerCategory;
-          
-          return (
-            <div
-              key={charm.id}
-              className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                isSelected 
-                  ? 'border-sage-500 bg-sage-50' 
-                  : canSelect || isSelected
-                  ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  : 'border-gray-100 opacity-50 cursor-not-allowed'
-              }`}
-              onClick={() => (canSelect || isSelected) && selectCharm(charm)}
-            >
-              {/* Preview indicator */}
-              {isInPreview && (
-                <div className="absolute top-2 right-2 bg-sage-500 text-white rounded-full p-1">
-                  <span className="text-xs">👁</span>
-                </div>
-              )}
-              
-              {/* Selection indicator */}
-              {isSelected && (
-                <div className="absolute top-2 left-2 bg-sage-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
-                  <span className="text-xs">✓</span>
-                </div>
-              )}
-              
-              <div className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden">
-                <img 
-                  src={charm.imageUrl} 
-                  alt={charm.name}
-                  className="w-full h-full object-cover"
-                />
+          ) : (
+            <div className="relative max-w-md mx-auto">
+              <div className="relative w-full aspect-square">
+                {/* Base necklace */}
+                {baseImageStatus === 'loaded' && baseImage ? (
+                  <img 
+                    src={selectedBase.imageUrl} 
+                    alt={selectedBase.name}
+                    className="w-full h-full object-contain rounded-lg"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                    <span className="text-gray-400">Loading...</span>
+                  </div>
+                )}
+                
+                {/* Preview charms - only latest per category */}
+                {getPreviewCharmsData().map((charm) => (
+                  charm && <CharmPreviewImage key={`preview-${charm.id}`} charm={charm} />
+                ))}
               </div>
               
-              <h4 className="font-medium text-sm text-center mb-1">{charm.name}</h4>
-              <p className="text-sage-600 text-center text-sm">+EGP {charm.price}</p>
-              
-              {!canSelect && !isSelected && (
-                <div className="absolute inset-0 bg-gray-500/20 rounded-lg flex items-center justify-center">
-                  <span className="text-xs bg-gray-800 text-white px-2 py-1 rounded">
-                    Max {maxCharmsPerCategory}
-                  </span>
-                </div>
-              )}
+              {/* Preview info */}
+              <div className="mt-4 text-center">
+                <h4 className="font-medium text-lg">{selectedBase.name}</h4>
+                <p className="text-sm text-gray-600 mt-1">
+                  Base: EGP {selectedBase.price.toFixed(2)}
+                </p>
+                {getTotalCharmCount() > 0 && (
+                  <p className="text-sm text-sage-600">
+                    + {getTotalCharmCount()} charm{getTotalCharmCount() !== 1 ? 's' : ''}
+                  </p>
+                )}
+                <p className="text-lg font-semibold text-sage-800 mt-2">
+                  Total: EGP {getTotalPrice().toFixed(2)}
+                </p>
+              </div>
             </div>
-          );
-        })}
+          )}
+        </div>
       </div>
-      
-      {/* Help Text */}
-      <div className="mt-6 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
-        <p className="font-medium mb-2">How it works:</p>
-        <ul className="space-y-1 text-xs">
-          <li>• Select up to {maxCharmsPerCategory} charms per category</li>
-          <li>• Preview shows the most recent charm from each category</li>
-          <li>• All selected charms are added to your cart</li>
-          <li>• Eye icon (👁) indicates which charm is shown in preview</li>
-        </ul>
+
+      {/* Selection Interface - Right Side */}
+      <div className="lg:w-1/2 space-y-8">
+        {/* Base Product Selection */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">1. Choose Your Base Necklace</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {baseProducts.map((base) => (
+              <div
+                key={base.id}
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                  selectedBase?.id === base.id 
+                    ? 'border-sage-500 bg-sage-50' 
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+                onClick={() => selectBase(base)}
+              >
+                {selectedBase?.id === base.id && (
+                  <div className="absolute top-2 right-2 bg-sage-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                    <span className="text-xs">✓</span>
+                  </div>
+                )}
+                
+                <div className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden">
+                  <img 
+                    src={base.imageUrl} 
+                    alt={base.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                <h4 className="font-medium text-sm text-center mb-1">{base.name}</h4>
+                <p className="text-sage-600 text-center text-sm">EGP {base.price.toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Charm Selection */}
+        {selectedBase && (
+          <div>
+            <h3 className="text-xl font-semibold mb-4">2. Add Your Charms</h3>
+            
+            {/* Selected Charms Summary */}
+            {getTotalCharmCount() > 0 && (
+              <div className="mb-6 p-4 bg-sage-50 rounded-lg">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-semibold text-sage-800">Selected Charms ({getTotalCharmCount()})</h4>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={clearAllCharms}
+                    className="text-rose-600 border-rose-300 hover:bg-rose-50"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    Clear All
+                  </Button>
+                </div>
+                
+                {Object.entries(selectedCharms).map(([category, charmIds]) => (
+                  charmIds.length > 0 && (
+                    <div key={category} className="mb-2">
+                      <span className="text-sm font-medium capitalize text-gray-700">{category}: </span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {charmIds.map(charmId => {
+                          const charm = charmData[category]?.find(c => c.id === charmId);
+                          const isInPreview = previewCharms[category] === charmId;
+                          return charm ? (
+                            <Badge 
+                              key={charmId} 
+                              variant="secondary"
+                              className={`text-xs ${isInPreview ? 'bg-sage-200 text-sage-800' : 'bg-gray-200 text-gray-700'}`}
+                            >
+                              {charm.name} +EGP {charm.price}
+                              {isInPreview && <span className="ml-1 text-sage-600">👁</span>}
+                              <button
+                                onClick={() => removeCharmFromCategory(category, charmId)}
+                                className="ml-1 text-rose-500 hover:text-rose-700"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  )
+                ))}
+              </div>
+            )}
+
+            {/* Category Navigation */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {categories.map(category => (
+                <Button
+                  key={category.id}
+                  variant={activeCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveCategory(category.id)}
+                  className={activeCategory === category.id ? 'bg-sage-500 hover:bg-sage-600' : ''}
+                >
+                  {category.name}
+                  {selectedCharms[category.id].length > 0 && (
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      {selectedCharms[category.id].length}
+                    </Badge>
+                  )}
+                </Button>
+              ))}
+            </div>
+
+            {/* Charm Selection Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {getCompatibleCharms().map((charm) => {
+                const isSelected = selectedCharms[charm.category].includes(charm.id);
+                const isInPreview = previewCharms[charm.category] === charm.id;
+                const canSelect = selectedCharms[charm.category].length < maxCharmsPerCategory;
+                
+                return (
+                  <div
+                    key={charm.id}
+                    className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                      isSelected 
+                        ? 'border-sage-500 bg-sage-50' 
+                        : canSelect || isSelected
+                        ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        : 'border-gray-100 opacity-50 cursor-not-allowed'
+                    }`}
+                    onClick={() => (canSelect || isSelected) && selectCharm(charm)}
+                  >
+                    {/* Preview indicator */}
+                    {isInPreview && (
+                      <div className="absolute top-2 right-2 bg-sage-500 text-white rounded-full p-1">
+                        <span className="text-xs">👁</span>
+                      </div>
+                    )}
+                    
+                    {/* Selection indicator */}
+                    {isSelected && (
+                      <div className="absolute top-2 left-2 bg-sage-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                        <span className="text-xs">✓</span>
+                      </div>
+                    )}
+                    
+                    <div className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden">
+                      <img 
+                        src={charm.imageUrl} 
+                        alt={charm.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    <h4 className="font-medium text-sm text-center mb-1">{charm.name}</h4>
+                    <p className="text-sage-600 text-center text-sm">+EGP {charm.price}</p>
+                    
+                    {!canSelect && !isSelected && (
+                      <div className="absolute inset-0 bg-gray-500/20 rounded-lg flex items-center justify-center">
+                        <span className="text-xs bg-gray-800 text-white px-2 py-1 rounded">
+                          Max {maxCharmsPerCategory}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {getCompatibleCharms().length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p>No {activeCategory} charms available for {selectedBase.name}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
