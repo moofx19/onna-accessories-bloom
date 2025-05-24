@@ -10,7 +10,19 @@ export interface Product {
   isSale?: boolean;
   variant?: string;
   charms?: number;
-  charmsDetails?: number[];
+  charmsDetails?: {
+    zodiac: string[];
+    initials: string[];
+    symbols: string[];
+    birthstones: string[];
+  };
+  baseProduct?: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    price: number;
+    type: 'gold' | 'silver' | 'rose-gold';
+  };
 }
 
 export interface CartItem extends Product {

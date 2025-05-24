@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, RotateCcw } from 'lucide-react';
-import useImage from '../hooks/useImage';
+import BaseSelector from './BaseSelector';
+import LivePreview from './LivePreview';
 
 interface BaseProduct {
   id: string;
@@ -19,8 +19,7 @@ interface Charm {
   category: 'zodiac' | 'initials' | 'symbols' | 'birthstones';
   imageUrl: string;
   price: number;
-  position: { x: number; y: number };
-  compatibleBases: string[]; // Which base products this charm works with
+  compatibleBases: string[];
 }
 
 interface SelectedCharms {
@@ -39,21 +38,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
   onCustomizationChange,
   maxCharmsPerCategory = 3
 }) => {
-  const [selectedBase, setSelectedBase] = useState<BaseProduct | null>(null);
-  const [selectedCharms, setSelectedCharms] = useState<SelectedCharms>({
-    zodiac: [],
-    initials: [],
-    symbols: [],
-    birthstones: []
-  });
-  
-  const [activeCategory, setActiveCategory] = useState<string>('symbols');
-  const [previewCharms, setPreviewCharms] = useState<{ [key: string]: string }>({});
-  
-  // Load base necklace image
-  const [baseImage, baseImageStatus] = useImage(selectedBase?.imageUrl || '');
-  
-  // Base product options
+  // Base product options with default selection
   const baseProducts: BaseProduct[] = [
     {
       id: 'gold-chain',
@@ -78,6 +63,18 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
     }
   ];
 
+  // Initialize with the first base product
+  const [selectedBase, setSelectedBase] = useState<BaseProduct>(baseProducts[0]);
+  const [selectedCharms, setSelectedCharms] = useState<SelectedCharms>({
+    zodiac: [],
+    initials: [],
+    symbols: [],
+    birthstones: []
+  });
+  
+  const [activeCategory, setActiveCategory] = useState<string>('symbols');
+  const [previewCharms, setPreviewCharms] = useState<{ [key: string]: string }>({});
+  
   // Charm data with base compatibility
   const charmData: { [key: string]: Charm[] } = {
     symbols: [
@@ -87,7 +84,6 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'symbols',
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
         price: 75,
-        position: { x: 50, y: 40 },
         compatibleBases: ['gold-chain', 'silver-chain', 'rose-gold-chain']
       },
       {
@@ -96,7 +92,6 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'symbols',
         imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=60&h=60&fit=crop',
         price: 75,
-        position: { x: 35, y: 50 },
         compatibleBases: ['gold-chain', 'silver-chain']
       },
       {
@@ -105,7 +100,6 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'symbols',
         imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
         price: 75,
-        position: { x: 65, y: 50 },
         compatibleBases: ['gold-chain', 'rose-gold-chain']
       }
     ],
@@ -116,7 +110,6 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'initials',
         imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
         price: 65,
-        position: { x: 40, y: 60 },
         compatibleBases: ['gold-chain', 'silver-chain', 'rose-gold-chain']
       },
       {
@@ -125,7 +118,6 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'initials',
         imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=60&h=60&fit=crop',
         price: 65,
-        position: { x: 60, y: 60 },
         compatibleBases: ['gold-chain', 'silver-chain']
       }
     ],
@@ -136,7 +128,6 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'zodiac',
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
         price: 85,
-        position: { x: 30, y: 35 },
         compatibleBases: ['gold-chain', 'rose-gold-chain']
       },
       {
@@ -145,7 +136,6 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'zodiac',
         imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
         price: 85,
-        position: { x: 70, y: 35 },
         compatibleBases: ['silver-chain', 'gold-chain']
       }
     ],
@@ -156,7 +146,6 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
         category: 'birthstones',
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
         price: 95,
-        position: { x: 50, y: 65 },
         compatibleBases: ['gold-chain', 'silver-chain', 'rose-gold-chain']
       }
     ]
@@ -168,28 +157,6 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
     { id: 'zodiac', name: 'Zodiac', color: 'bg-purple-500' },
     { id: 'birthstones', name: 'Birthstones', color: 'bg-red-500' }
   ];
-
-  const CharmPreviewImage: React.FC<{ charm: Charm }> = ({ charm }) => {
-    const [charmImage, charmImageStatus] = useImage(charm.imageUrl);
-    
-    if (charmImageStatus !== 'loaded' || !charmImage) return null;
-    
-    return (
-      <div
-        className="absolute transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-white shadow-lg z-10"
-        style={{
-          left: `${charm.position.x}%`,
-          top: `${charm.position.y}%`
-        }}
-      >
-        <img 
-          src={charm.imageUrl} 
-          alt={charm.name}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    );
-  };
 
   const selectBase = (base: BaseProduct) => {
     setSelectedBase(base);
@@ -308,99 +275,28 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
   return (
     <div className="flex flex-col lg:flex-row gap-8 min-h-screen">
       {/* Always-Visible Live Preview - Left Side */}
-      <div className="lg:w-1/2 lg:sticky lg:top-24 lg:h-fit">
-        <div className="bg-gray-50 rounded-lg p-6">
-          <h3 className="text-xl font-semibold mb-4 text-center">Live Preview</h3>
-          
-          {!selectedBase ? (
-            <div className="aspect-square max-w-md mx-auto bg-gray-200 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500 text-center">
-                Select a base necklace to start customizing
-              </p>
-            </div>
-          ) : (
-            <div className="relative max-w-md mx-auto">
-              <div className="relative w-full aspect-square">
-                {/* Base necklace */}
-                {baseImageStatus === 'loaded' && baseImage ? (
-                  <img 
-                    src={selectedBase.imageUrl} 
-                    alt={selectedBase.name}
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
-                    <span className="text-gray-400">Loading...</span>
-                  </div>
-                )}
-                
-                {/* Preview charms - only latest per category */}
-                {getPreviewCharmsData().map((charm) => (
-                  charm && <CharmPreviewImage key={`preview-${charm.id}`} charm={charm} />
-                ))}
-              </div>
-              
-              {/* Preview info */}
-              <div className="mt-4 text-center">
-                <h4 className="font-medium text-lg">{selectedBase.name}</h4>
-                <p className="text-sm text-gray-600 mt-1">
-                  Base: EGP {selectedBase.price.toFixed(2)}
-                </p>
-                {getTotalCharmCount() > 0 && (
-                  <p className="text-sm text-sage-600">
-                    + {getTotalCharmCount()} charm{getTotalCharmCount() !== 1 ? 's' : ''}
-                  </p>
-                )}
-                <p className="text-lg font-semibold text-sage-800 mt-2">
-                  Total: EGP {getTotalPrice().toFixed(2)}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
+      <div className="lg:w-1/2">
+        <LivePreview
+          selectedBase={selectedBase}
+          previewCharms={getPreviewCharmsData()}
+          totalPrice={getTotalPrice()}
+          totalCharmCount={getTotalCharmCount()}
+        />
       </div>
 
       {/* Selection Interface - Right Side */}
       <div className="lg:w-1/2 space-y-8">
         {/* Base Product Selection */}
-        <div>
-          <h3 className="text-xl font-semibold mb-4">1. Choose Your Base Necklace</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {baseProducts.map((base) => (
-              <div
-                key={base.id}
-                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                  selectedBase?.id === base.id 
-                    ? 'border-sage-500 bg-sage-50' 
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-                onClick={() => selectBase(base)}
-              >
-                {selectedBase?.id === base.id && (
-                  <div className="absolute top-2 right-2 bg-sage-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
-                    <span className="text-xs">✓</span>
-                  </div>
-                )}
-                
-                <div className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden">
-                  <img 
-                    src={base.imageUrl} 
-                    alt={base.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                
-                <h4 className="font-medium text-sm text-center mb-1">{base.name}</h4>
-                <p className="text-sage-600 text-center text-sm">EGP {base.price.toFixed(2)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <BaseSelector
+          bases={baseProducts}
+          selectedBase={selectedBase}
+          onBaseSelect={selectBase}
+        />
 
         {/* Charm Selection */}
         {selectedBase && (
           <div>
-            <h3 className="text-xl font-semibold mb-4">2. Add Your Charms</h3>
+            <h3 className="text-xl font-semibold mb-4">Add Your Charms</h3>
             
             {/* Selected Charms Summary */}
             {getTotalCharmCount() > 0 && (
@@ -410,7 +306,15 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={clearAllCharms}
+                    onClick={() => {
+                      setSelectedCharms({
+                        zodiac: [],
+                        initials: [],
+                        symbols: [],
+                        birthstones: []
+                      });
+                      setPreviewCharms({});
+                    }}
                     className="text-rose-600 border-rose-300 hover:bg-rose-50"
                   >
                     <RotateCcw className="w-4 h-4 mr-1" />
