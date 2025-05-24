@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import ProductImageCarousel from '../components/ProductImageCarousel';
-import CharmSelector from '../components/CharmSelector';
+import CharmCustomizer from '../components/CharmCustomizer';
 import QuantitySelector from '../components/QuantitySelector';
 import ProductTabNavigation from '../components/ProductTabNavigation';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
@@ -17,7 +17,13 @@ const Product: React.FC = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
-  const [selectedCharms, setSelectedCharms] = useState<number[]>([]);
+  const [selectedCharms, setSelectedCharms] = useState<any>({
+    zodiac: [],
+    initials: [],
+    symbols: [],
+    birthstones: []
+  });
+  const [charmsPrice, setCharmsPrice] = useState(0);
   
   const product = products.find(p => p.id === Number(id));
   
@@ -48,15 +54,20 @@ const Product: React.FC = () => {
 
   // Calculate total price including selected charms
   const basePrice = product.salePrice || product.price;
-  const charmsPrice = selectedCharms.length * 50; // Each charm costs EGP 50
   const totalPrice = (basePrice + charmsPrice) * quantity;
   
+  const handleCharmsChange = (charms: any, totalCharmsPrice: number) => {
+    setSelectedCharms(charms);
+    setCharmsPrice(totalCharmsPrice);
+  };
+  
   const handleAddToCart = () => {
+    const totalSelectedCharms = Object.values(selectedCharms).flat().length;
     const productWithCharms = {
       ...product,
       price: product.price + charmsPrice,
       salePrice: product.salePrice ? product.salePrice + charmsPrice : undefined,
-      charms: selectedCharms.length,
+      charms: totalSelectedCharms,
       charmsDetails: selectedCharms
     };
     
@@ -68,14 +79,16 @@ const Product: React.FC = () => {
   const goToNextProduct = () => {
     if (nextProductId) {
       navigate(`/product/${nextProductId}`);
-      setSelectedCharms([]); // Reset charms when changing products
+      setSelectedCharms({ zodiac: [], initials: [], symbols: [], birthstones: [] });
+      setCharmsPrice(0);
     }
   };
 
   const goToPrevProduct = () => {
     if (prevProductId) {
       navigate(`/product/${prevProductId}`);
-      setSelectedCharms([]); // Reset charms when changing products
+      setSelectedCharms({ zodiac: [], initials: [], symbols: [], birthstones: [] });
+      setCharmsPrice(0);
     }
   };
   
@@ -131,13 +144,6 @@ const Product: React.FC = () => {
                 personal meaning to your jewelry piece.
               </p>
             </div>
-            
-            {/* Charm Selector */}
-            <CharmSelector
-              selectedCharms={selectedCharms}
-              onCharmsChange={setSelectedCharms}
-              maxCharms={5}
-            />
             
             {/* Quantity selector */}
             <div className="mb-8">
@@ -201,6 +207,16 @@ const Product: React.FC = () => {
               <p>Handcrafted with love in Egypt</p>
             </div>
           </div>
+        </div>
+
+        {/* Charm Customizer */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-medium text-gray-900 mb-8 text-center">Customize Your Charms</h2>
+          <CharmCustomizer
+            baseNecklaceImage={product.imageUrl}
+            onCharmsChange={handleCharmsChange}
+            maxCharmsPerCategory={3}
+          />
         </div>
         
         {/* Related Products */}
