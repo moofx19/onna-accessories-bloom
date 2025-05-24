@@ -8,6 +8,9 @@ export interface Product {
   category: string;
   isNew?: boolean;
   isSale?: boolean;
+  variant?: string;
+  charms?: number;
+  charmsDetails?: number[];
 }
 
 export interface CartItem extends Product {

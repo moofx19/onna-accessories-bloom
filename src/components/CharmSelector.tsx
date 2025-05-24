@@ -14,7 +14,7 @@ interface Charm {
   imageUrl: string;
   price: number;
   category: 'symbols' | 'letters' | 'birthstones' | 'zodiac';
-  dependencies?: number[]; // IDs of charms that must be selected first
+  dependencies?: number[];
 }
 
 interface CharmSelectorProps {
@@ -33,28 +33,28 @@ const CharmSelector: React.FC<CharmSelectorProps> = ({
   // Mock charm data with dependencies
   const charms: Charm[] = [
     // Symbols category
-    { id: 1, name: "Heart", imageUrl: "/placeholder.svg", price: 50, category: 'symbols' },
-    { id: 2, name: "Star", imageUrl: "/placeholder.svg", price: 50, category: 'symbols' },
-    { id: 3, name: "Moon", imageUrl: "/placeholder.svg", price: 50, category: 'symbols' },
-    { id: 4, name: "Sun", imageUrl: "/placeholder.svg", price: 50, category: 'symbols' },
-    { id: 5, name: "Infinity", imageUrl: "/placeholder.svg", price: 50, category: 'symbols' },
+    { id: 1, name: "Heart", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: 75, category: 'symbols' },
+    { id: 2, name: "Star", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=100&fit=crop", price: 75, category: 'symbols' },
+    { id: 3, name: "Moon", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=100&h=100&fit=crop", price: 75, category: 'symbols' },
+    { id: 4, name: "Sun", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=100&fit=crop", price: 75, category: 'symbols' },
+    { id: 5, name: "Infinity", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: 75, category: 'symbols' },
     
     // Letters category
-    { id: 6, name: "Letter A", imageUrl: "/placeholder.svg", price: 50, category: 'letters' },
-    { id: 7, name: "Letter B", imageUrl: "/placeholder.svg", price: 50, category: 'letters' },
-    { id: 8, name: "Letter C", imageUrl: "/placeholder.svg", price: 50, category: 'letters' },
-    { id: 9, name: "Letter D", imageUrl: "/placeholder.svg", price: 50, category: 'letters' },
-    { id: 10, name: "Letter E", imageUrl: "/placeholder.svg", price: 50, category: 'letters' },
+    { id: 6, name: "Letter A", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=100&h=100&fit=crop", price: 65, category: 'letters' },
+    { id: 7, name: "Letter B", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=100&fit=crop", price: 65, category: 'letters' },
+    { id: 8, name: "Letter C", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: 65, category: 'letters' },
+    { id: 9, name: "Letter D", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=100&h=100&fit=crop", price: 65, category: 'letters' },
+    { id: 10, name: "Letter E", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=100&fit=crop", price: 65, category: 'letters' },
     
     // Birthstones category - these depend on having at least one symbol
-    { id: 11, name: "January Ruby", imageUrl: "/placeholder.svg", price: 75, category: 'birthstones', dependencies: [1, 2, 3, 4, 5] },
-    { id: 12, name: "February Amethyst", imageUrl: "/placeholder.svg", price: 75, category: 'birthstones', dependencies: [1, 2, 3, 4, 5] },
-    { id: 13, name: "March Aquamarine", imageUrl: "/placeholder.svg", price: 75, category: 'birthstones', dependencies: [1, 2, 3, 4, 5] },
+    { id: 11, name: "January Ruby", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: 95, category: 'birthstones', dependencies: [1, 2, 3, 4, 5] },
+    { id: 12, name: "February Amethyst", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=100&h=100&fit=crop", price: 95, category: 'birthstones', dependencies: [1, 2, 3, 4, 5] },
+    { id: 13, name: "March Aquamarine", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=100&fit=crop", price: 95, category: 'birthstones', dependencies: [1, 2, 3, 4, 5] },
     
     // Zodiac category - these depend on having a birthstone
-    { id: 14, name: "Aries", imageUrl: "/placeholder.svg", price: 60, category: 'zodiac', dependencies: [11, 12, 13] },
-    { id: 15, name: "Taurus", imageUrl: "/placeholder.svg", price: 60, category: 'zodiac', dependencies: [11, 12, 13] },
-    { id: 16, name: "Gemini", imageUrl: "/placeholder.svg", price: 60, category: 'zodiac', dependencies: [11, 12, 13] },
+    { id: 14, name: "Aries", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: 85, category: 'zodiac', dependencies: [11, 12, 13] },
+    { id: 15, name: "Taurus", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=100&h=100&fit=crop", price: 85, category: 'zodiac', dependencies: [11, 12, 13] },
+    { id: 16, name: "Gemini", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=100&fit=crop", price: 85, category: 'zodiac', dependencies: [11, 12, 13] },
   ];
 
   const categories = [
@@ -101,25 +101,66 @@ const CharmSelector: React.FC<CharmSelectorProps> = ({
     onCharmsChange(newCharms);
   };
 
+  const getTotalCharmsPrice = () => {
+    return selectedCharms.reduce((total, charmId) => {
+      const charm = charms.find(c => c.id === charmId);
+      return total + (charm?.price || 0);
+    }, 0);
+  };
+
   return (
     <div className="my-8">
       <h3 className="text-sm font-medium uppercase tracking-wider text-gray-600 mb-4">
         CUSTOMIZE YOUR CHARMS ({selectedCharms.length}/{maxCharms})
       </h3>
       
-      {/* Selected Charms Display */}
+      {/* Selected Charms Display with Visual Preview */}
       {selectedCharms.length > 0 && (
-        <div className="mb-6 p-4 bg-sage-50 rounded-lg">
-          <h4 className="text-sm font-medium text-sage-800 mb-3">Selected Charms:</h4>
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-6 p-6 bg-gradient-to-r from-sage-50 to-sage-100 rounded-lg border-2 border-sage-200">
+          <h4 className="text-lg font-semibold text-sage-800 mb-4">Your Customized Necklace Preview</h4>
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative">
+              {/* Necklace base */}
+              <div className="w-32 h-32 rounded-full border-4 border-sage-300 bg-gradient-to-br from-yellow-100 to-yellow-200 flex items-center justify-center">
+                <span className="text-sage-700 text-xs font-medium">Base Necklace</span>
+              </div>
+              {/* Selected charms around the necklace */}
+              {selectedCharms.slice(0, 5).map((charmId, index) => {
+                const charm = charms.find(c => c.id === charmId);
+                const angle = (index * 360) / Math.min(selectedCharms.length, 5);
+                const x = Math.cos((angle * Math.PI) / 180) * 60;
+                const y = Math.sin((angle * Math.PI) / 180) * 60;
+                
+                return charm ? (
+                  <div 
+                    key={charmId}
+                    className="absolute w-8 h-8 rounded-full border-2 border-white shadow-lg overflow-hidden transform -translate-x-1/2 -translate-y-1/2"
+                    style={{ 
+                      left: `calc(50% + ${x}px)`,
+                      top: `calc(50% + ${y}px)`
+                    }}
+                  >
+                    <img 
+                      src={charm.imageUrl} 
+                      alt={charm.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : null;
+              })}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-center">
             {selectedCharms.map(charmId => {
               const charm = charms.find(c => c.id === charmId);
               return charm ? (
-                <div key={charmId} className="flex items-center bg-white rounded-full px-3 py-1 text-sm">
-                  <span>{charm.name}</span>
+                <div key={charmId} className="flex items-center bg-white rounded-full px-3 py-1 text-sm shadow-sm">
+                  <span className="text-sage-800">{charm.name}</span>
+                  <span className="mx-1 text-sage-600">•</span>
+                  <span className="text-sage-600">EGP {charm.price}</span>
                   <button
                     onClick={() => removeCharm(charmId)}
-                    className="ml-2 text-gray-400 hover:text-gray-600"
+                    className="ml-2 text-rose-400 hover:text-rose-600 transition-colors"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -127,8 +168,8 @@ const CharmSelector: React.FC<CharmSelectorProps> = ({
               ) : null;
             })}
           </div>
-          <p className="text-xs text-sage-600 mt-2">
-            Total charm cost: +EGP {selectedCharms.length * 50}.00
+          <p className="text-center text-sage-700 font-medium mt-3">
+            Total charms cost: +EGP {getTotalCharmsPrice().toFixed(2)}
           </p>
         </div>
       )}
@@ -171,9 +212,9 @@ const CharmSelector: React.FC<CharmSelectorProps> = ({
                   <button
                     className={`w-full h-full flex flex-col items-center ${
                       isSelected
-                        ? 'ring-2 ring-sage-500 ring-offset-2'
+                        ? 'ring-4 ring-sage-500 ring-offset-2 bg-sage-50'
                         : canSelect
-                        ? 'ring-1 ring-gray-200 hover:ring-gray-300'
+                        ? 'ring-1 ring-gray-200 hover:ring-gray-300 hover:bg-gray-50'
                         : 'ring-1 ring-gray-100 opacity-50'
                     } rounded-lg p-3 transition-all ${
                       !canSelect ? 'cursor-not-allowed' : 'cursor-pointer'
@@ -224,10 +265,12 @@ const CharmSelector: React.FC<CharmSelectorProps> = ({
       </Carousel>
 
       {/* Help text */}
-      <div className="mt-4 text-xs text-gray-500">
+      <div className="mt-4 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+        <p className="font-medium mb-1">How it works:</p>
         <p>• Select symbols first to unlock birthstones</p>
         <p>• Select birthstones to unlock zodiac charms</p>
         <p>• Maximum {maxCharms} charms per necklace</p>
+        <p>• Each charm adds to the total price</p>
       </div>
     </div>
   );
