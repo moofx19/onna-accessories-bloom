@@ -23,7 +23,7 @@ interface CharmSelectionPanelProps {
   selectedCharms: SelectedCharms;
   charmData: { [key: string]: Charm[] };
   previewCharms: { [key: string]: string };
-  onRemoveCharm: (category: string, charmId: string) => void;
+  onRemoveCharm: (category: keyof SelectedCharms, charmId: string) => void;
   onClearAll: () => void;
   totalCharmCount: number;
   totalPrice: number;
@@ -39,9 +39,9 @@ const CharmSelectionPanel: React.FC<CharmSelectionPanelProps> = ({
   totalPrice
 }) => {
   const getAllSelectedCharms = () => {
-    const allCharms: (Charm & { category: string })[] = [];
+    const allCharms: (Charm & { category: keyof SelectedCharms })[] = [];
     
-    Object.entries(selectedCharms).forEach(([category, charmIds]) => {
+    (Object.entries(selectedCharms) as [keyof SelectedCharms, string[]][]).forEach(([category, charmIds]) => {
       charmIds.forEach(charmId => {
         const charm = charmData[category]?.find(c => c.id === charmId);
         if (charm) {

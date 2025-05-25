@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import useImage from '../hooks/useImage';
-import { useNecklaceCurveDetection } from '../hooks/useNecklaceCurveDetection';
+import { useAdvancedCurveDetection } from '../hooks/useAdvancedCurveDetection';
 import { useCharmPlacement } from '../hooks/useCharmPlacement';
 
 interface BaseProduct {
@@ -34,9 +34,10 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   totalCharmCount
 }) => {
   const [baseImage, baseImageStatus] = useImage(selectedBase?.imageUrl || '');
-  const { detectNecklaceCurve } = useNecklaceCurveDetection();
+  const { detectNecklaceCurve } = useAdvancedCurveDetection();
   const [necklaceCurve, setNecklaceCurve] = useState<any[]>([]);
   const [detectionStatus, setDetectionStatus] = useState<'idle' | 'detecting' | 'complete'>('idle');
+  const [confidence, setConfidence] = useState<number>(0);
   
   const charmPositions = useCharmPlacement(necklaceCurve, previewCharms.length);
 
@@ -46,8 +47,11 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       setDetectionStatus('detecting');
       detectNecklaceCurve(selectedBase.imageUrl).then((result) => {
         setNecklaceCurve(result.curve);
+        setConfidence(result.confidence);
         setDetectionStatus('complete');
-        console.log('Curve detection complete:', result.success ? 'Success' : 'Using fallback');
+        console.log(`Advanced curve detection for ${selectedBase.name}:`, 
+          result.success ? 'Success' : 'Fallback', 
+          `(${result.confidence.toFixed(2)} confidence)`);
       });
     }
   }, [baseImageStatus, selectedBase?.imageUrl, detectNecklaceCurve]);
@@ -110,10 +114,16 @@ const LivePreview: React.FC<LivePreviewProps> = ({
               </div>
             )}
             
-            {/* Detection status indicator */}
+            {/* Advanced detection status indicator */}
             {detectionStatus === 'detecting' && (
               <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                Analyzing curve...
+                AI Analyzing Curve...
+              </div>
+            )}
+            
+            {detectionStatus === 'complete' && confidence > 0 && (
+              <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                AI: {Math.round(confidence * 100)}% confident
               </div>
             )}
             
@@ -174,6 +184,11 @@ const LivePreview: React.FC<LivePreviewProps> = ({
             <p className="text-lg font-semibold text-sage-800 mt-2">
               Total: EGP {totalPrice.toFixed(2)}
             </p>
+            {detectionStatus === 'complete' && confidence > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                Advanced AI curve detection • {Math.round(confidence * 100)}% accuracy
+              </p>
+            )}
           </div>
         </div>
       )}
