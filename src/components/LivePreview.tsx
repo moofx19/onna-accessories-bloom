@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import useImage from '../hooks/useImage';
-import SmartCharmPositioning from './SmartCharmPositioning';
+import { useNecklaceCurveDetection } from '../hooks/useNecklaceCurveDetection';
+import { useCharmPlacement } from '../hooks/useCharmPlacement';
 
 interface BaseProduct {
   id: string;
@@ -33,28 +34,52 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   totalCharmCount
 }) => {
   const [baseImage, baseImageStatus] = useImage(selectedBase?.imageUrl || '');
+  const { detectNecklaceCurve } = useNecklaceCurveDetection();
+  const [necklaceCurve, setNecklaceCurve] = useState<any[]>([]);
+  const [detectionStatus, setDetectionStatus] = useState<'idle' | 'detecting' | 'complete'>('idle');
+  
+  const charmPositions = useCharmPlacement(necklaceCurve, previewCharms.length);
 
-  const CharmImage: React.FC<{ charm: Charm; x: number; y: number; rotation: number }> = ({ 
-    charm, x, y, rotation 
+  // Detect necklace curve when base image loads
+  useEffect(() => {
+    if (baseImageStatus === 'loaded' && selectedBase?.imageUrl) {
+      setDetectionStatus('detecting');
+      detectNecklaceCurve(selectedBase.imageUrl).then((result) => {
+        setNecklaceCurve(result.curve);
+        setDetectionStatus('complete');
+        console.log('Curve detection complete:', result.success ? 'Success' : 'Using fallback');
+      });
+    }
+  }, [baseImageStatus, selectedBase?.imageUrl, detectNecklaceCurve]);
+
+  const CharmImage: React.FC<{ charm: Charm; x: number; y: number; rotation: number; scale: number }> = ({ 
+    charm, x, y, rotation, scale 
   }) => {
     const [charmImage, charmImageStatus] = useImage(charm.imageUrl);
     
     if (charmImageStatus !== 'loaded' || !charmImage) return null;
     
+    const size = 32 * scale; // Base size scaled
+    
     return (
       <div
-        className="absolute transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-white shadow-lg z-10 transition-all duration-300"
+        className="absolute transition-all duration-300 ease-out"
         style={{
           left: `${x}px`,
           top: `${y}px`,
-          transform: `translate(-50%, -50%) rotate(${rotation}deg)`
+          transform: `translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`,
+          width: `${size}px`,
+          height: `${size}px`,
+          zIndex: 10
         }}
       >
-        <img 
-          src={charm.imageUrl} 
-          alt={charm.name}
-          className="w-full h-full object-cover"
-        />
+        <div className="w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg bg-white">
+          <img 
+            src={charm.imageUrl} 
+            alt={charm.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
       </div>
     );
   };
@@ -85,30 +110,54 @@ const LivePreview: React.FC<LivePreviewProps> = ({
               </div>
             )}
             
-            {/* Smart positioned charms */}
-            <SmartCharmPositioning 
-              necklaceType={selectedBase.type}
-              selectedCharms={previewCharms}
-            >
-              {(positions) => (
-                <>
-                  {previewCharms.map((charm, index) => {
-                    const position = positions[index];
-                    if (!position) return null;
-                    
-                    return (
-                      <CharmImage
-                        key={`preview-${charm.id}`}
-                        charm={charm}
-                        x={position.x}
-                        y={position.y}
-                        rotation={position.rotation}
-                      />
-                    );
-                  })}
-                </>
-              )}
-            </SmartCharmPositioning>
+            {/* Detection status indicator */}
+            {detectionStatus === 'detecting' && (
+              <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                Analyzing curve...
+              </div>
+            )}
+            
+            {/* AI-positioned charms */}
+            {detectionStatus === 'complete' && previewCharms.map((charm, index) => {
+              const position = charmPositions[index];
+              if (!position) return null;
+              
+              return (
+                <CharmImage
+                  key={`preview-${charm.id}-${index}`}
+                  charm={charm}
+                  x={position.x}
+                  y={position.y}
+                  rotation={position.rotation}
+                  scale={position.scale}
+                />
+              );
+            })}
+            
+            {/* Curve visualization (for debugging) */}
+            {process.env.NODE_ENV === 'development' && necklaceCurve.length > 0 && (
+              <svg 
+                className="absolute inset-0 w-full h-full pointer-events-none" 
+                style={{ zIndex: 5 }}
+              >
+                <path
+                  d={`M ${necklaceCurve.map(point => `${point.x},${point.y}`).join(' L ')}`}
+                  stroke="rgba(255, 0, 0, 0.5)"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                {necklaceCurve.map((point, index) => (
+                  <circle
+                    key={index}
+                    cx={point.x}
+                    cy={point.y}
+                    r="2"
+                    fill="red"
+                    opacity="0.7"
+                  />
+                ))}
+              </svg>
+            )}
           </div>
           
           {/* Preview info */}
@@ -119,7 +168,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
             </p>
             {totalCharmCount > 0 && (
               <p className="text-sm text-sage-600">
-                + {totalCharmCount} charm{totalCharmCount !== 1 ? 's' : ''}
+                + {totalCharmCount} charm{totalCharmCount !== 1 ? 's' : ''} (AI positioned)
               </p>
             )}
             <p className="text-lg font-semibold text-sage-800 mt-2">

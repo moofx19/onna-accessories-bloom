@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, RotateCcw } from 'lucide-react';
 import BaseSelector from './BaseSelector';
 import LivePreview from './LivePreview';
+import CharmSelectionPanel from './CharmSelectionPanel';
 
 interface BaseProduct {
   id: string;
