@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,12 +39,12 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
   onCustomizationChange,
   maxCharmsPerCategory = 3
 }) => {
-  // Base product options with default selection
+  // Base product options with your uploaded chain image
   const baseProducts: BaseProduct[] = [
     {
       id: 'gold-chain',
       name: 'Gold Chain Necklace',
-      imageUrl: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+      imageUrl: '/lovable-uploads/9d852174-9bd0-4978-baf8-0007913866a9.png',
       price: 450,
       type: 'gold'
     },
@@ -63,7 +64,7 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
     }
   ];
 
-  // Initialize with the first base product
+  // Initialize with the first base product (your uploaded chain)
   const [selectedBase, setSelectedBase] = useState<BaseProduct>(baseProducts[0]);
   const [selectedCharms, setSelectedCharms] = useState<SelectedCharms>({
     zodiac: [],
@@ -75,31 +76,31 @@ const CharmCustomizer: React.FC<CharmCustomizerProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>('symbols');
   const [previewCharms, setPreviewCharms] = useState<{ [key: string]: string }>({});
   
-  // Charm data with base compatibility
+  // Charm data with your uploaded charm images
   const charmData: { [key: string]: Charm[] } = {
     symbols: [
       {
-        id: 'heart',
-        name: 'Heart',
+        id: 'lemon-slice',
+        name: 'Lemon Slice',
         category: 'symbols',
-        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop',
+        imageUrl: '/lovable-uploads/b2ec9aa7-d1be-4b66-b363-3b42fd9206b1.png',
         price: 75,
         compatibleBases: ['gold-chain', 'silver-chain', 'rose-gold-chain']
       },
       {
-        id: 'star',
-        name: 'Star',
+        id: 'starfish',
+        name: 'Starfish',
         category: 'symbols',
-        imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=60&h=60&fit=crop',
-        price: 75,
+        imageUrl: '/lovable-uploads/293ddfc0-9173-4de2-a8f3-4a6078ac0a85.png',
+        price: 85,
         compatibleBases: ['gold-chain', 'silver-chain']
       },
       {
-        id: 'moon',
-        name: 'Moon',
+        id: 'celestial',
+        name: 'Celestial Night',
         category: 'symbols',
-        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=60&h=60&fit=crop',
-        price: 75,
+        imageUrl: '/lovable-uploads/2aacaef9-7bfc-4169-ae3b-5cd630804c4b.png',
+        price: 95,
         compatibleBases: ['gold-chain', 'rose-gold-chain']
       }
     ],
