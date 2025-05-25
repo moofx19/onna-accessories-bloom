@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { products } from '../data/products';
@@ -6,7 +5,7 @@ import MainLayout from '../components/Layout/MainLayout';
 import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
-import CharmCustomizer from '../components/CharmCustomizer';
+import DragDropCharmCustomizer from '../components/DragDropCharmCustomizer';
 import ProductTabNavigation from '../components/ProductTabNavigation';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
 
@@ -139,15 +138,14 @@ const Product: React.FC = () => {
           
           {/* Description */}
           <p className="text-gray-600 max-w-2xl">
-            Create your perfect charm necklace by selecting a base and adding personalized charms. 
+            Create your perfect charm necklace by selecting a base and dragging charms directly onto the necklace. 
             Each combination tells your unique story with elegant craftsmanship and meaningful details.
           </p>
         </div>
 
-        {/* Charm Customizer - Always Visible Preview */}
-        <CharmCustomizer
+        {/* Drag & Drop Charm Customizer */}
+        <DragDropCharmCustomizer
           onCustomizationChange={handleCustomizationChange}
-          maxCharmsPerCategory={3}
         />
         
         {/* Action buttons */}
