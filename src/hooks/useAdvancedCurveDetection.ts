@@ -1,3 +1,4 @@
+
 import { useCallback, useRef } from 'react';
 import cv from 'opencv-ts';
 
@@ -55,7 +56,7 @@ export const useAdvancedCurveDetection = () => {
 
           // Apply Gaussian blur to reduce noise
           const blurred = new cv.Mat();
-          cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0); // Fixed: added sigmaY parameter
+          cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
 
           // Edge detection using Canny
           cv.Canny(blurred, edges, 50, 150);
