@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -177,14 +176,27 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
     );
   };
 
-  const handleDragStart = (charm: Charm) => {
+  const handleDragStart = (e: React.DragEvent, charm: Charm) => {
+    e.preventDefault = () => {}; // Prevent default behavior
     setDraggedCharm(charm);
     setDraggedPlacedCharm(null);
+    
+    // Add drag effect for better mobile feedback
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+    }
   };
 
-  const handlePlacedCharmDragStart = (placedCharm: PlacedCharm) => {
+  const handlePlacedCharmDragStart = (e: React.DragEvent, placedCharm: PlacedCharm) => {
+    e.preventDefault = () => {};
     setDraggedPlacedCharm(placedCharm);
     setDraggedCharm(null);
+    
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -352,6 +364,7 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                style={{ touchAction: 'manipulation' }}
               >
                 {/* Base necklace image */}
                 <img 
@@ -359,6 +372,7 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
                   alt={selectedBase.name}
                   className="w-full h-full object-contain pointer-events-none"
                   draggable={false}
+                  style={{ userSelect: 'none', touchAction: 'none' }}
                 />
                 
                 {/* Drag overlay */}
@@ -381,26 +395,28 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
                       left: `${placedCharm.x}%`,
                       top: `${placedCharm.y}%`,
                       transform: 'translate(-50%, -50%)',
-                      zIndex: 10
+                      zIndex: 10,
+                      touchAction: 'manipulation'
                     }}
                     draggable
-                    onDragStart={() => handlePlacedCharmDragStart(placedCharm)}
+                    onDragStart={(e) => handlePlacedCharmDragStart(e, placedCharm)}
                     onTouchStart={() => handleCharmTouch(placedCharm.id)}
                     onClick={() => handleCharmTouch(placedCharm.id)}
                   >
                     <div className="relative">
-                      <div className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8 md:w-10 md:h-10'} rounded-full overflow-hidden shadow-lg bg-white`}>
-                        <img 
-                          src={placedCharm.charm.imageUrl} 
-                          alt={placedCharm.charm.name}
-                          className="w-full h-full object-cover"
-                          draggable={false}
-                        />
-                      </div>
+                      <div 
+                        className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8 md:w-10 md:h-10'} rounded-full overflow-hidden shadow-lg`}
+                        style={{
+                          backgroundImage: `url(${placedCharm.charm.imageUrl})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          backgroundColor: 'white'
+                        }}
+                      />
                       
                       {/* Move icon - shows after 3 seconds */}
                       {placedCharm.showIcons && (
-                        <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center">
+                        <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center animate-fade-in">
                           <Move className="w-2 h-2" />
                         </div>
                       )}
@@ -412,7 +428,7 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
                             e.stopPropagation();
                             removePlacedCharm(placedCharm.id);
                           }}
-                          className={`absolute -top-1 -right-1 ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} bg-rose-500 text-white rounded-full flex items-center justify-center`}
+                          className={`absolute -top-1 -right-1 ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} bg-rose-500 text-white rounded-full flex items-center justify-center animate-fade-in hover:bg-rose-600 transition-colors`}
                         >
                           <X className={`${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`} />
                         </button>
@@ -462,13 +478,15 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
               <div className={`grid ${isMobile ? 'grid-cols-4' : 'grid-cols-3 md:grid-cols-4'} gap-2`}>
                 {placedCharms.map(placedCharm => (
                   <div key={placedCharm.id} className="relative group">
-                    <div className="aspect-square bg-white rounded-md p-1">
-                      <img 
-                        src={placedCharm.charm.imageUrl} 
-                        alt={placedCharm.charm.name}
-                        className="w-full h-full object-cover rounded"
-                      />
-                    </div>
+                    <div 
+                      className="aspect-square rounded-md"
+                      style={{
+                        backgroundImage: `url(${placedCharm.charm.imageUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundColor: 'white'
+                      }}
+                    />
                     <button
                       onClick={() => removePlacedCharm(placedCharm.id)}
                       className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
@@ -510,18 +528,21 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
               {getCompatibleCharms().map((charm) => (
                 <div
                   key={charm.id}
-                  className="rounded-lg p-3 cursor-grab active:cursor-grabbing hover:bg-sage-50 transition-all touch-manipulation"
+                  className="rounded-lg p-3 cursor-grab active:cursor-grabbing hover:bg-sage-50 transition-all touch-manipulation hover:scale-105"
                   draggable
-                  onDragStart={() => handleDragStart(charm)}
+                  onDragStart={(e) => handleDragStart(e, charm)}
+                  style={{ touchAction: 'manipulation', userSelect: 'none' }}
                 >
-                  <div className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden">
-                    <img 
-                      src={charm.imageUrl} 
-                      alt={charm.name}
-                      className="w-full h-full object-cover pointer-events-none"
-                      draggable={false}
-                    />
-                  </div>
+                  <div 
+                    className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden"
+                    style={{
+                      backgroundImage: `url(${charm.imageUrl})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      touchAction: 'none',
+                      userSelect: 'none'
+                    }}
+                  />
                   
                   <h4 className="font-medium text-sm text-center mb-1">{charm.name}</h4>
                   <p className="text-sage-600 text-center text-sm">+EGP {charm.price}</p>
