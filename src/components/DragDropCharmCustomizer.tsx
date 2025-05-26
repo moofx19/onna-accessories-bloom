@@ -2,7 +2,6 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, RotateCcw, Trash2, Move } from 'lucide-react';
-import BaseSelector from './BaseSelector';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BaseProduct {
@@ -340,12 +339,45 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
 
   return (
     <div className="space-y-6 min-h-screen">
-      {/* Base Product Selection - Now at the top */}
-      <BaseSelector
-        bases={baseProducts}
-        selectedBase={selectedBase}
-        onBaseSelect={selectBase}
-      />
+      {/* Base Product Selection - Thumbnail Style */}
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold">Choose Your Base Necklace</h3>
+        <div className={`grid ${isMobile ? 'grid-cols-3 gap-3' : 'grid-cols-3 md:grid-cols-3 gap-4'}`}>
+          {baseProducts.map((base) => (
+            <div
+              key={base.id}
+              className={`relative rounded-lg p-3 cursor-pointer transition-all hover:bg-sage-50 hover:scale-105 ${
+                selectedBase?.id === base.id 
+                  ? 'ring-2 ring-sage-500 bg-sage-50' 
+                  : 'hover:shadow-md'
+              }`}
+              onClick={() => selectBase(base)}
+              style={{ touchAction: 'manipulation', userSelect: 'none' }}
+            >
+              {selectedBase?.id === base.id && (
+                <div className="absolute top-2 right-2 bg-sage-500 text-white rounded-full w-6 h-6 flex items-center justify-center z-10">
+                  <span className="text-xs">✓</span>
+                </div>
+              )}
+              
+              <div 
+                className="aspect-square rounded-md mb-3 overflow-hidden"
+                style={{
+                  backgroundImage: `url(${base.imageUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundColor: '#f3f4f6',
+                  touchAction: 'none',
+                  userSelect: 'none'
+                }}
+              />
+              
+              <h4 className="font-medium text-sm text-center mb-1">{base.name}</h4>
+              <p className="text-sage-600 text-center text-sm">EGP {base.price.toFixed(2)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className={`flex ${isMobile ? 'flex-col' : 'flex-col lg:flex-row'} gap-4`}>
         {/* Live Preview */}
@@ -356,10 +388,10 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
             <div className="relative max-w-md mx-auto">
               <div 
                 ref={necklaceRef}
-                className={`relative w-full aspect-square border-4 border-dashed transition-colors ${
+                className={`relative w-full aspect-square transition-colors ${
                   isDragOver 
-                    ? 'border-sage-500 bg-sage-50' 
-                    : 'border-gray-300 bg-white'
+                    ? 'bg-sage-50' 
+                    : 'bg-white'
                 } rounded-lg overflow-hidden ${isMobile ? 'min-h-[300px]' : ''}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -367,12 +399,16 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
                 style={{ touchAction: 'manipulation' }}
               >
                 {/* Base necklace image */}
-                <img 
-                  src={selectedBase.imageUrl} 
-                  alt={selectedBase.name}
-                  className="w-full h-full object-contain pointer-events-none"
-                  draggable={false}
-                  style={{ userSelect: 'none', touchAction: 'none' }}
+                <div
+                  className="w-full h-full pointer-events-none"
+                  style={{
+                    backgroundImage: `url(${selectedBase.imageUrl})`,
+                    backgroundSize: 'contain',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    userSelect: 'none',
+                    touchAction: 'none'
+                  }}
                 />
                 
                 {/* Drag overlay */}
@@ -459,7 +495,69 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
 
         {/* Selection Interface */}
         <div className={`${isMobile ? 'order-2' : 'lg:w-1/2'} space-y-6`}>
-          {/* Placed Charms Summary */}
+          {/* Charm Selection */}
+          <div>
+            <h3 className="text-xl font-semibold mb-4">
+              {isMobile ? 'Drag Charms Up to Necklace' : 'Drag Charms to Necklace'}
+            </h3>
+            
+            {/* Category Navigation */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {categories.map(category => (
+                <Button
+                  key={category.id}
+                  variant={activeCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveCategory(category.id)}
+                  className={activeCategory === category.id ? 'bg-sage-500 hover:bg-sage-600' : ''}
+                >
+                  {category.name}
+                </Button>
+              ))}
+            </div>
+
+            {/* Charm Grid */}
+            <div className={`grid ${isMobile ? 'grid-cols-3 gap-3' : 'grid-cols-2 md:grid-cols-3 gap-4'}`}>
+              {getCompatibleCharms().map((charm) => (
+                <div
+                  key={charm.id}
+                  className="rounded-lg p-3 cursor-grab active:cursor-grabbing hover:bg-sage-50 transition-all touch-manipulation hover:scale-105"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, charm)}
+                  style={{ touchAction: 'manipulation', userSelect: 'none' }}
+                >
+                  <div 
+                    className="aspect-square rounded-md mb-3 overflow-hidden"
+                    style={{
+                      backgroundImage: `url(${charm.imageUrl})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundColor: '#f3f4f6',
+                      touchAction: 'none',
+                      userSelect: 'none'
+                    }}
+                  />
+                  
+                  <h4 className="font-medium text-sm text-center mb-1">{charm.name}</h4>
+                  <p className="text-sage-600 text-center text-sm">+EGP {charm.price}</p>
+                  
+                  <div className="mt-2 text-center">
+                    <Badge variant="secondary" className="text-xs capitalize">
+                      {charm.category}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {getCompatibleCharms().length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p>No {activeCategory} charms available for {selectedBase.name}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Placed Charms Summary - Now below charm selection */}
           {placedCharms.length > 0 && (
             <div className="p-4 bg-sage-50 rounded-lg">
               <div className="flex justify-between items-center mb-3">
@@ -501,67 +599,6 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
               </div>
             </div>
           )}
-
-          {/* Charm Selection */}
-          <div>
-            <h3 className="text-xl font-semibold mb-4">
-              {isMobile ? 'Drag Charms Up to Necklace' : 'Drag Charms to Necklace'}
-            </h3>
-            
-            {/* Category Navigation */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {categories.map(category => (
-                <Button
-                  key={category.id}
-                  variant={activeCategory === category.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setActiveCategory(category.id)}
-                  className={activeCategory === category.id ? 'bg-sage-500 hover:bg-sage-600' : ''}
-                >
-                  {category.name}
-                </Button>
-              ))}
-            </div>
-
-            {/* Charm Grid */}
-            <div className={`grid ${isMobile ? 'grid-cols-3 gap-3' : 'grid-cols-2 md:grid-cols-3 gap-4'}`}>
-              {getCompatibleCharms().map((charm) => (
-                <div
-                  key={charm.id}
-                  className="rounded-lg p-3 cursor-grab active:cursor-grabbing hover:bg-sage-50 transition-all touch-manipulation hover:scale-105"
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, charm)}
-                  style={{ touchAction: 'manipulation', userSelect: 'none' }}
-                >
-                  <div 
-                    className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden"
-                    style={{
-                      backgroundImage: `url(${charm.imageUrl})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      touchAction: 'none',
-                      userSelect: 'none'
-                    }}
-                  />
-                  
-                  <h4 className="font-medium text-sm text-center mb-1">{charm.name}</h4>
-                  <p className="text-sage-600 text-center text-sm">+EGP {charm.price}</p>
-                  
-                  <div className="mt-2 text-center">
-                    <Badge variant="secondary" className="text-xs capitalize">
-                      {charm.category}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {getCompatibleCharms().length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <p>No {activeCategory} charms available for {selectedBase.name}</p>
-              </div>
-            )}
-          </div>
 
           {/* Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
