@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { products } from '../data/products';
@@ -7,7 +8,7 @@ import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import DragDropCharmCustomizer from '../components/DragDropCharmCustomizer';
 import ProductTabNavigation from '../components/ProductTabNavigation';
-import { ShoppingCart, ArrowLeft } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 
 interface BaseProduct {
   id: string;
@@ -53,11 +54,10 @@ const Product: React.FC = () => {
     );
   }
 
-  // Find next and previous product IDs
+  // Find next product ID
   const productIds = products.map(p => p.id);
   const currentIndex = productIds.indexOf(Number(id));
   const nextProductId = currentIndex < productIds.length - 1 ? productIds[currentIndex + 1] : null;
-  const prevProductId = currentIndex > 0 ? productIds[currentIndex - 1] : null;
 
   // Get related products (same category, exclude current product)
   const relatedProducts = products
@@ -102,15 +102,6 @@ const Product: React.FC = () => {
       setTotalPrice(0);
     }
   };
-
-  const goToPrevProduct = () => {
-    if (prevProductId) {
-      navigate(`/product/${prevProductId}`);
-      setSelectedBase(null);
-      setSelectedCharms({ zodiac: [], initials: [], symbols: [], birthstones: [] });
-      setTotalPrice(0);
-    }
-  };
   
   return (
     <MainLayout>
@@ -148,28 +139,8 @@ const Product: React.FC = () => {
           onCustomizationChange={handleCustomizationChange}
         />
         
-        {/* Action buttons */}
+        {/* Action button */}
         <div className="flex gap-4 mt-12 max-w-md mx-auto lg:mx-0">
-          {prevProductId ? (
-            <Button 
-              variant="secondary"
-              className="flex-1 py-6 text-sage-700"
-              onClick={goToPrevProduct}
-            >
-              <ArrowLeft className="mr-2 h-5 w-5" />
-              PREV TAB
-            </Button>
-          ) : (
-            <Button 
-              variant="secondary"
-              className="flex-1 py-6 text-sage-700"
-              disabled
-            >
-              <ArrowLeft className="mr-2 h-5 w-5" />
-              PREV TAB
-            </Button>
-          )}
-          
           <Button 
             onClick={handleAddToCart}
             disabled={!selectedBase}
