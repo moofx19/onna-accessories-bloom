@@ -2,8 +2,9 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, RotateCcw, Trash2 } from 'lucide-react';
+import { X, RotateCcw, Trash2, Move } from 'lucide-react';
 import BaseSelector from './BaseSelector';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BaseProduct {
   id: string;
@@ -45,6 +46,8 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
   onCustomizationChange,
   maxCharmsPerCategory = 3
 }) => {
+  const isMobile = useIsMobile();
+  
   // Base product options
   const baseProducts: BaseProduct[] = [
     {
@@ -157,6 +160,7 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
   const [placedCharms, setPlacedCharms] = useState<PlacedCharm[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('symbols');
   const [draggedCharm, setDraggedCharm] = useState<Charm | null>(null);
+  const [draggedPlacedCharm, setDraggedPlacedCharm] = useState<PlacedCharm | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   
   const necklaceRef = useRef<HTMLDivElement>(null);
@@ -173,6 +177,12 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
 
   const handleDragStart = (charm: Charm) => {
     setDraggedCharm(charm);
+    setDraggedPlacedCharm(null);
+  };
+
+  const handlePlacedCharmDragStart = (placedCharm: PlacedCharm) => {
+    setDraggedPlacedCharm(placedCharm);
+    setDraggedCharm(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -188,27 +198,39 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
     e.preventDefault();
     setIsDragOver(false);
     
-    if (!draggedCharm || !necklaceRef.current) return;
+    if (!necklaceRef.current) return;
 
     const rect = necklaceRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100; // Convert to percentage
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    // Check if charm is compatible with selected base
-    if (!draggedCharm.compatibleBases.includes(selectedBase.id)) {
-      alert(`${draggedCharm.name} is not compatible with ${selectedBase.name}`);
-      return;
+    if (draggedPlacedCharm) {
+      // Moving an existing charm
+      setPlacedCharms(prev => 
+        prev.map(pc => 
+          pc.id === draggedPlacedCharm.id 
+            ? { ...pc, x, y }
+            : pc
+        )
+      );
+      setDraggedPlacedCharm(null);
+    } else if (draggedCharm) {
+      // Adding a new charm
+      if (!draggedCharm.compatibleBases.includes(selectedBase.id)) {
+        alert(`${draggedCharm.name} is not compatible with ${selectedBase.name}`);
+        return;
+      }
+
+      const newPlacedCharm: PlacedCharm = {
+        charm: draggedCharm,
+        x,
+        y,
+        id: `${draggedCharm.id}-${Date.now()}`
+      };
+
+      setPlacedCharms(prev => [...prev, newPlacedCharm]);
+      setDraggedCharm(null);
     }
-
-    const newPlacedCharm: PlacedCharm = {
-      charm: draggedCharm,
-      x,
-      y,
-      id: `${draggedCharm.id}-${Date.now()}`
-    };
-
-    setPlacedCharms(prev => [...prev, newPlacedCharm]);
-    setDraggedCharm(null);
   };
 
   const removePlacedCharm = (placedCharmId: string) => {
@@ -252,11 +274,11 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
   }, [selectedBase, placedCharms]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 min-h-screen">
-      {/* Live Preview - Left Side */}
-      <div className="lg:w-1/2">
-        <div className="bg-gray-50 rounded-lg p-6 sticky top-24">
-          <h3 className="text-xl font-semibold mb-4 text-center">Drag & Drop Preview</h3>
+    <div className={`flex ${isMobile ? 'flex-col' : 'flex-col lg:flex-row'} gap-4 min-h-screen`}>
+      {/* Live Preview */}
+      <div className={`${isMobile ? 'order-2' : 'lg:w-1/2'}`}>
+        <div className="bg-gray-50 rounded-lg p-4 sticky top-24">
+          <h3 className="text-lg font-semibold mb-4 text-center">Drag & Drop Preview</h3>
           
           <div className="relative max-w-md mx-auto">
             <div 
@@ -265,7 +287,7 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
                 isDragOver 
                   ? 'border-sage-500 bg-sage-50' 
                   : 'border-gray-300 bg-white'
-              } rounded-lg overflow-hidden`}
+              } rounded-lg overflow-hidden ${isMobile ? 'min-h-[300px]' : ''}`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -282,7 +304,9 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
               {isDragOver && (
                 <div className="absolute inset-0 bg-sage-500/20 flex items-center justify-center">
                   <div className="bg-white rounded-lg px-4 py-2 shadow-lg">
-                    <p className="text-sage-800 font-medium">Drop charm here!</p>
+                    <p className="text-sage-800 font-medium">
+                      {draggedPlacedCharm ? 'Move charm here!' : 'Drop charm here!'}
+                    </p>
                   </div>
                 </div>
               )}
@@ -291,27 +315,35 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
               {placedCharms.map((placedCharm) => (
                 <div
                   key={placedCharm.id}
-                  className="absolute group cursor-pointer"
+                  className="absolute group cursor-move touch-manipulation"
                   style={{
                     left: `${placedCharm.x}%`,
                     top: `${placedCharm.y}%`,
                     transform: 'translate(-50%, -50%)',
                     zIndex: 10
                   }}
+                  draggable
+                  onDragStart={() => handlePlacedCharmDragStart(placedCharm)}
                 >
                   <div className="relative">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-white shadow-lg bg-white">
+                    <div className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8 md:w-10 md:h-10'} rounded-full overflow-hidden shadow-lg bg-white`}>
                       <img 
                         src={placedCharm.charm.imageUrl} 
                         alt={placedCharm.charm.name}
                         className="w-full h-full object-cover"
+                        draggable={false}
                       />
                     </div>
+                    {isMobile && (
+                      <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 text-white rounded-full opacity-70 flex items-center justify-center">
+                        <Move className="w-2 h-2" />
+                      </div>
+                    )}
                     <button
                       onClick={() => removePlacedCharm(placedCharm.id)}
-                      className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                      className={`absolute -top-1 -right-1 ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}
                     >
-                      <X className="w-2 h-2" />
+                      <X className={`${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`} />
                     </button>
                   </div>
                 </div>
@@ -326,7 +358,7 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
               </p>
               {placedCharms.length > 0 && (
                 <p className="text-sm text-sage-600">
-                  + {placedCharms.length} charm{placedCharms.length !== 1 ? 's' : ''} (manually placed)
+                  + {placedCharms.length} charm{placedCharms.length !== 1 ? 's' : ''}
                 </p>
               )}
               <p className="text-lg font-semibold text-sage-800 mt-2">
@@ -337,8 +369,8 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
         </div>
       </div>
 
-      {/* Selection Interface - Right Side */}
-      <div className="lg:w-1/2 space-y-8">
+      {/* Selection Interface */}
+      <div className={`${isMobile ? 'order-1' : 'lg:w-1/2'} space-y-6`}>
         {/* Base Product Selection */}
         <BaseSelector
           bases={baseProducts}
@@ -362,10 +394,10 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
               </Button>
             </div>
             
-            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+            <div className={`grid ${isMobile ? 'grid-cols-4' : 'grid-cols-3 md:grid-cols-4'} gap-2`}>
               {placedCharms.map(placedCharm => (
                 <div key={placedCharm.id} className="relative group">
-                  <div className="aspect-square bg-white rounded-md border p-1">
+                  <div className="aspect-square bg-white rounded-md p-1">
                     <img 
                       src={placedCharm.charm.imageUrl} 
                       alt={placedCharm.charm.name}
@@ -389,7 +421,9 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
 
         {/* Charm Selection */}
         <div>
-          <h3 className="text-xl font-semibold mb-4">Drag Charms to Necklace</h3>
+          <h3 className="text-xl font-semibold mb-4">
+            {isMobile ? 'Drag Charms Up to Necklace' : 'Drag Charms to Necklace'}
+          </h3>
           
           {/* Category Navigation */}
           <div className="flex flex-wrap gap-2 mb-6">
@@ -407,11 +441,11 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
           </div>
 
           {/* Charm Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className={`grid ${isMobile ? 'grid-cols-3 gap-3' : 'grid-cols-2 md:grid-cols-3 gap-4'}`}>
             {getCompatibleCharms().map((charm) => (
               <div
                 key={charm.id}
-                className="border-2 border-gray-200 rounded-lg p-4 cursor-grab active:cursor-grabbing hover:border-sage-300 hover:bg-sage-50 transition-all"
+                className="rounded-lg p-3 cursor-grab active:cursor-grabbing hover:bg-sage-50 transition-all touch-manipulation"
                 draggable
                 onDragStart={() => handleDragStart(charm)}
               >
@@ -449,6 +483,7 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
           <ul className="text-sm text-blue-700 space-y-1">
             <li>• Drag any charm from the selection area</li>
             <li>• Drop it anywhere on the necklace image</li>
+            <li>• Drag placed charms to reposition them</li>
             <li>• Click the X button to remove placed charms</li>
             <li>• Switch between base necklaces anytime</li>
           </ul>
