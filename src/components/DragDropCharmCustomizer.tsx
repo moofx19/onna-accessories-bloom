@@ -28,6 +28,7 @@ interface PlacedCharm {
   x: number;
   y: number;
   id: string; // unique placement ID
+  showIcons?: boolean;
 }
 
 interface SelectedCharms {
@@ -162,6 +163,7 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
   const [draggedCharm, setDraggedCharm] = useState<Charm | null>(null);
   const [draggedPlacedCharm, setDraggedPlacedCharm] = useState<PlacedCharm | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [touchTimers, setTouchTimers] = useState<{ [key: string]: NodeJS.Timeout }>({});
   
   const necklaceRef = useRef<HTMLDivElement>(null);
 
@@ -225,7 +227,8 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
         charm: draggedCharm,
         x,
         y,
-        id: `${draggedCharm.id}-${Date.now()}`
+        id: `${draggedCharm.id}-${Date.now()}`,
+        showIcons: false
       };
 
       setPlacedCharms(prev => [...prev, newPlacedCharm]);
@@ -233,11 +236,54 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
     }
   };
 
+  const handleCharmTouch = (placedCharmId: string) => {
+    // Clear any existing timer for this charm
+    if (touchTimers[placedCharmId]) {
+      clearTimeout(touchTimers[placedCharmId]);
+    }
+
+    // Set a new 3-second timer
+    const timer = setTimeout(() => {
+      setPlacedCharms(prev => 
+        prev.map(pc => 
+          pc.id === placedCharmId 
+            ? { ...pc, showIcons: true }
+            : pc
+        )
+      );
+      
+      // Clean up the timer reference
+      setTouchTimers(prev => {
+        const newTimers = { ...prev };
+        delete newTimers[placedCharmId];
+        return newTimers;
+      });
+    }, 3000);
+
+    setTouchTimers(prev => ({
+      ...prev,
+      [placedCharmId]: timer
+    }));
+  };
+
   const removePlacedCharm = (placedCharmId: string) => {
+    // Clear any pending timer
+    if (touchTimers[placedCharmId]) {
+      clearTimeout(touchTimers[placedCharmId]);
+      setTouchTimers(prev => {
+        const newTimers = { ...prev };
+        delete newTimers[placedCharmId];
+        return newTimers;
+      });
+    }
+    
     setPlacedCharms(prev => prev.filter(pc => pc.id !== placedCharmId));
   };
 
   const clearAllCharms = () => {
+    // Clear all timers
+    Object.values(touchTimers).forEach(timer => clearTimeout(timer));
+    setTouchTimers({});
     setPlacedCharms([]);
   };
 
@@ -273,220 +319,241 @@ const DragDropCharmCustomizer: React.FC<DragDropCharmCustomizerProps> = ({
     onCustomizationChange(selectedBase, getSelectedCharmsForCallback(), getTotalPrice());
   }, [selectedBase, placedCharms]);
 
+  // Cleanup timers on unmount
+  React.useEffect(() => {
+    return () => {
+      Object.values(touchTimers).forEach(timer => clearTimeout(timer));
+    };
+  }, []);
+
   return (
-    <div className={`flex ${isMobile ? 'flex-col' : 'flex-col lg:flex-row'} gap-4 min-h-screen`}>
-      {/* Live Preview */}
-      <div className={`${isMobile ? 'order-2' : 'lg:w-1/2'}`}>
-        <div className="bg-gray-50 rounded-lg p-4 sticky top-24">
-          <h3 className="text-lg font-semibold mb-4 text-center">Drag & Drop Preview</h3>
-          
-          <div className="relative max-w-md mx-auto">
-            <div 
-              ref={necklaceRef}
-              className={`relative w-full aspect-square border-4 border-dashed transition-colors ${
-                isDragOver 
-                  ? 'border-sage-500 bg-sage-50' 
-                  : 'border-gray-300 bg-white'
-              } rounded-lg overflow-hidden ${isMobile ? 'min-h-[300px]' : ''}`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              {/* Base necklace image */}
-              <img 
-                src={selectedBase.imageUrl} 
-                alt={selectedBase.name}
-                className="w-full h-full object-contain pointer-events-none"
-                draggable={false}
-              />
-              
-              {/* Drag overlay */}
-              {isDragOver && (
-                <div className="absolute inset-0 bg-sage-500/20 flex items-center justify-center">
-                  <div className="bg-white rounded-lg px-4 py-2 shadow-lg">
-                    <p className="text-sage-800 font-medium">
-                      {draggedPlacedCharm ? 'Move charm here!' : 'Drop charm here!'}
-                    </p>
+    <div className="space-y-6 min-h-screen">
+      {/* Base Product Selection - Now at the top */}
+      <BaseSelector
+        bases={baseProducts}
+        selectedBase={selectedBase}
+        onBaseSelect={selectBase}
+      />
+
+      <div className={`flex ${isMobile ? 'flex-col' : 'flex-col lg:flex-row'} gap-4`}>
+        {/* Live Preview */}
+        <div className={`${isMobile ? 'order-1' : 'lg:w-1/2'}`}>
+          <div className="bg-gray-50 rounded-lg p-4 sticky top-24">
+            <h3 className="text-lg font-semibold mb-4 text-center">Drag & Drop Preview</h3>
+            
+            <div className="relative max-w-md mx-auto">
+              <div 
+                ref={necklaceRef}
+                className={`relative w-full aspect-square border-4 border-dashed transition-colors ${
+                  isDragOver 
+                    ? 'border-sage-500 bg-sage-50' 
+                    : 'border-gray-300 bg-white'
+                } rounded-lg overflow-hidden ${isMobile ? 'min-h-[300px]' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                {/* Base necklace image */}
+                <img 
+                  src={selectedBase.imageUrl} 
+                  alt={selectedBase.name}
+                  className="w-full h-full object-contain pointer-events-none"
+                  draggable={false}
+                />
+                
+                {/* Drag overlay */}
+                {isDragOver && (
+                  <div className="absolute inset-0 bg-sage-500/20 flex items-center justify-center">
+                    <div className="bg-white rounded-lg px-4 py-2 shadow-lg">
+                      <p className="text-sage-800 font-medium">
+                        {draggedPlacedCharm ? 'Move charm here!' : 'Drop charm here!'}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+                
+                {/* Placed charms */}
+                {placedCharms.map((placedCharm) => (
+                  <div
+                    key={placedCharm.id}
+                    className="absolute group cursor-move touch-manipulation"
+                    style={{
+                      left: `${placedCharm.x}%`,
+                      top: `${placedCharm.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 10
+                    }}
+                    draggable
+                    onDragStart={() => handlePlacedCharmDragStart(placedCharm)}
+                    onTouchStart={() => handleCharmTouch(placedCharm.id)}
+                    onClick={() => handleCharmTouch(placedCharm.id)}
+                  >
+                    <div className="relative">
+                      <div className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8 md:w-10 md:h-10'} rounded-full overflow-hidden shadow-lg bg-white`}>
+                        <img 
+                          src={placedCharm.charm.imageUrl} 
+                          alt={placedCharm.charm.name}
+                          className="w-full h-full object-cover"
+                          draggable={false}
+                        />
+                      </div>
+                      
+                      {/* Move icon - shows after 3 seconds */}
+                      {placedCharm.showIcons && (
+                        <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center">
+                          <Move className="w-2 h-2" />
+                        </div>
+                      )}
+                      
+                      {/* Delete icon - shows after 3 seconds */}
+                      {placedCharm.showIcons && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removePlacedCharm(placedCharm.id);
+                          }}
+                          className={`absolute -top-1 -right-1 ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} bg-rose-500 text-white rounded-full flex items-center justify-center`}
+                        >
+                          <X className={`${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
               
-              {/* Placed charms */}
-              {placedCharms.map((placedCharm) => (
-                <div
-                  key={placedCharm.id}
-                  className="absolute group cursor-move touch-manipulation"
-                  style={{
-                    left: `${placedCharm.x}%`,
-                    top: `${placedCharm.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 10
-                  }}
-                  draggable
-                  onDragStart={() => handlePlacedCharmDragStart(placedCharm)}
+              {/* Preview info */}
+              <div className="mt-4 text-center">
+                <h4 className="font-medium text-lg">{selectedBase.name}</h4>
+                <p className="text-sm text-gray-600 mt-1">
+                  Base: EGP {selectedBase.price.toFixed(2)}
+                </p>
+                {placedCharms.length > 0 && (
+                  <p className="text-sm text-sage-600">
+                    + {placedCharms.length} charm{placedCharms.length !== 1 ? 's' : ''}
+                  </p>
+                )}
+                <p className="text-lg font-semibold text-sage-800 mt-2">
+                  Total: EGP {getTotalPrice().toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Selection Interface */}
+        <div className={`${isMobile ? 'order-2' : 'lg:w-1/2'} space-y-6`}>
+          {/* Placed Charms Summary */}
+          {placedCharms.length > 0 && (
+            <div className="p-4 bg-sage-50 rounded-lg">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="font-semibold text-sage-800">Placed Charms ({placedCharms.length})</h4>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={clearAllCharms}
+                  className="text-rose-600 border-rose-300 hover:bg-rose-50"
                 >
-                  <div className="relative">
-                    <div className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8 md:w-10 md:h-10'} rounded-full overflow-hidden shadow-lg bg-white`}>
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Clear All
+                </Button>
+              </div>
+              
+              <div className={`grid ${isMobile ? 'grid-cols-4' : 'grid-cols-3 md:grid-cols-4'} gap-2`}>
+                {placedCharms.map(placedCharm => (
+                  <div key={placedCharm.id} className="relative group">
+                    <div className="aspect-square bg-white rounded-md p-1">
                       <img 
                         src={placedCharm.charm.imageUrl} 
                         alt={placedCharm.charm.name}
-                        className="w-full h-full object-cover"
-                        draggable={false}
+                        className="w-full h-full object-cover rounded"
                       />
                     </div>
-                    {isMobile && (
-                      <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 text-white rounded-full opacity-70 flex items-center justify-center">
-                        <Move className="w-2 h-2" />
-                      </div>
-                    )}
                     <button
                       onClick={() => removePlacedCharm(placedCharm.id)}
-                      className={`absolute -top-1 -right-1 ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                     >
-                      <X className={`${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`} />
+                      <X className="w-3 h-3" />
                     </button>
+                    <p className="text-xs text-center mt-1 text-gray-600 truncate">
+                      {placedCharm.charm.name}
+                    </p>
                   </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Preview info */}
-            <div className="mt-4 text-center">
-              <h4 className="font-medium text-lg">{selectedBase.name}</h4>
-              <p className="text-sm text-gray-600 mt-1">
-                Base: EGP {selectedBase.price.toFixed(2)}
-              </p>
-              {placedCharms.length > 0 && (
-                <p className="text-sm text-sage-600">
-                  + {placedCharms.length} charm{placedCharms.length !== 1 ? 's' : ''}
-                </p>
-              )}
-              <p className="text-lg font-semibold text-sage-800 mt-2">
-                Total: EGP {getTotalPrice().toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Selection Interface */}
-      <div className={`${isMobile ? 'order-1' : 'lg:w-1/2'} space-y-6`}>
-        {/* Base Product Selection */}
-        <BaseSelector
-          bases={baseProducts}
-          selectedBase={selectedBase}
-          onBaseSelect={selectBase}
-        />
-
-        {/* Placed Charms Summary */}
-        {placedCharms.length > 0 && (
-          <div className="p-4 bg-sage-50 rounded-lg">
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="font-semibold text-sage-800">Placed Charms ({placedCharms.length})</h4>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={clearAllCharms}
-                className="text-rose-600 border-rose-300 hover:bg-rose-50"
-              >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Clear All
-              </Button>
-            </div>
-            
-            <div className={`grid ${isMobile ? 'grid-cols-4' : 'grid-cols-3 md:grid-cols-4'} gap-2`}>
-              {placedCharms.map(placedCharm => (
-                <div key={placedCharm.id} className="relative group">
-                  <div className="aspect-square bg-white rounded-md p-1">
-                    <img 
-                      src={placedCharm.charm.imageUrl} 
-                      alt={placedCharm.charm.name}
-                      className="w-full h-full object-cover rounded"
-                    />
-                  </div>
-                  <button
-                    onClick={() => removePlacedCharm(placedCharm.id)}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                  <p className="text-xs text-center mt-1 text-gray-600 truncate">
-                    {placedCharm.charm.name}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Charm Selection */}
-        <div>
-          <h3 className="text-xl font-semibold mb-4">
-            {isMobile ? 'Drag Charms Up to Necklace' : 'Drag Charms to Necklace'}
-          </h3>
-          
-          {/* Category Navigation */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {categories.map(category => (
-              <Button
-                key={category.id}
-                variant={activeCategory === category.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveCategory(category.id)}
-                className={activeCategory === category.id ? 'bg-sage-500 hover:bg-sage-600' : ''}
-              >
-                {category.name}
-              </Button>
-            ))}
-          </div>
-
-          {/* Charm Grid */}
-          <div className={`grid ${isMobile ? 'grid-cols-3 gap-3' : 'grid-cols-2 md:grid-cols-3 gap-4'}`}>
-            {getCompatibleCharms().map((charm) => (
-              <div
-                key={charm.id}
-                className="rounded-lg p-3 cursor-grab active:cursor-grabbing hover:bg-sage-50 transition-all touch-manipulation"
-                draggable
-                onDragStart={() => handleDragStart(charm)}
-              >
-                <div className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden">
-                  <img 
-                    src={charm.imageUrl} 
-                    alt={charm.name}
-                    className="w-full h-full object-cover pointer-events-none"
-                    draggable={false}
-                  />
-                </div>
-                
-                <h4 className="font-medium text-sm text-center mb-1">{charm.name}</h4>
-                <p className="text-sage-600 text-center text-sm">+EGP {charm.price}</p>
-                
-                <div className="mt-2 text-center">
-                  <Badge variant="secondary" className="text-xs capitalize">
-                    {charm.category}
-                  </Badge>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-
-          {getCompatibleCharms().length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p>No {activeCategory} charms available for {selectedBase.name}</p>
             </div>
           )}
-        </div>
 
-        {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-semibold text-blue-800 mb-2">How to use:</h4>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Drag any charm from the selection area</li>
-            <li>• Drop it anywhere on the necklace image</li>
-            <li>• Drag placed charms to reposition them</li>
-            <li>• Click the X button to remove placed charms</li>
-            <li>• Switch between base necklaces anytime</li>
-          </ul>
+          {/* Charm Selection */}
+          <div>
+            <h3 className="text-xl font-semibold mb-4">
+              {isMobile ? 'Drag Charms Up to Necklace' : 'Drag Charms to Necklace'}
+            </h3>
+            
+            {/* Category Navigation */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {categories.map(category => (
+                <Button
+                  key={category.id}
+                  variant={activeCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveCategory(category.id)}
+                  className={activeCategory === category.id ? 'bg-sage-500 hover:bg-sage-600' : ''}
+                >
+                  {category.name}
+                </Button>
+              ))}
+            </div>
+
+            {/* Charm Grid */}
+            <div className={`grid ${isMobile ? 'grid-cols-3 gap-3' : 'grid-cols-2 md:grid-cols-3 gap-4'}`}>
+              {getCompatibleCharms().map((charm) => (
+                <div
+                  key={charm.id}
+                  className="rounded-lg p-3 cursor-grab active:cursor-grabbing hover:bg-sage-50 transition-all touch-manipulation"
+                  draggable
+                  onDragStart={() => handleDragStart(charm)}
+                >
+                  <div className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden">
+                    <img 
+                      src={charm.imageUrl} 
+                      alt={charm.name}
+                      className="w-full h-full object-cover pointer-events-none"
+                      draggable={false}
+                    />
+                  </div>
+                  
+                  <h4 className="font-medium text-sm text-center mb-1">{charm.name}</h4>
+                  <p className="text-sage-600 text-center text-sm">+EGP {charm.price}</p>
+                  
+                  <div className="mt-2 text-center">
+                    <Badge variant="secondary" className="text-xs capitalize">
+                      {charm.category}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {getCompatibleCharms().length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p>No {activeCategory} charms available for {selectedBase.name}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Instructions */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-semibold text-blue-800 mb-2">How to use:</h4>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>• Drag any charm from the selection area</li>
+              <li>• Drop it anywhere on the necklace image</li>
+              <li>• Tap a placed charm and wait 3 seconds to show controls</li>
+              <li>• Drag placed charms to reposition them</li>
+              <li>• Click the X button to remove placed charms</li>
+              <li>• Switch between base necklaces anytime</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
