@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import DisplayNecklace from "./DisplayNecklace";
 import CharmSelector from "./CharmSelector";
 
@@ -48,17 +48,17 @@ const NecklaceCustomizer = () => {
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h2 className="text-lg font-bold mb-2 text-gray-900">Customize Your Necklace</h2>
+      <h2 className="text-lg font-bold mb-2">Charms Necklace</h2>
       <DisplayNecklace selectedCharm={selectedCharm} onExportImage={setExportedImage} />
-      <p className="text-xl font-semibold mt-2 text-gray-900">EGP {totalPrice.toFixed(2)}</p>
+      <p className="text-xl font-semibold mt-2">EGP {totalPrice.toFixed(2)}</p>
       <CharmSelector charms={charms} selected={selectedCharm} onSelect={setSelectedCharm} />
 
       <button
         onClick={handleSave}
         disabled={!exportedImage}
-        className="mt-4 w-full px-4 py-2 bg-sage-500 hover:bg-sage-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+        className="mt-4 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Save Customized Necklace
+        Save Necklace
       </button>
     </div>
   );

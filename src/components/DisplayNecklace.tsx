@@ -38,9 +38,9 @@ const DisplayNecklace: React.FC<DisplayNecklaceProps> = ({ selectedCharm, onExpo
 
         charmImage.onload = () => {
           // Position charm at the center-bottom of the necklace
-          const charmSize = 40;
+          const charmSize = 32;
           const charmX = canvas.width / 2 - charmSize / 2;
-          const charmY = canvas.height / 2 + 20;
+          const charmY = canvas.height / 2 + 10;
           
           ctx.drawImage(charmImage, charmX, charmY, charmSize, charmSize);
 
@@ -59,21 +59,21 @@ const DisplayNecklace: React.FC<DisplayNecklaceProps> = ({ selectedCharm, onExpo
     <>
       <canvas 
         ref={canvasRef} 
-        width={300} 
-        height={300} 
+        width={240} 
+        height={240} 
         style={{ display: "none" }} 
       />
-      <div className="relative w-72 h-72 mx-auto bg-gray-50 rounded-lg overflow-hidden">
+      <div className="relative w-60 h-60 mx-auto">
         <img 
           src="/lovable-uploads/76c36594-b8a6-4272-bb02-6ee87c1302b8.png" 
-          alt="Base Necklace" 
+          alt="Necklace" 
           className="w-full h-full object-contain"
         />
         {selectedCharm && (
           <img
             src={selectedCharm.image}
             alt={selectedCharm.label}
-            className="absolute top-[60%] left-1/2 transform -translate-x-1/2 w-10 h-10"
+            className="absolute top-[88%] left-[45%] w-6 h-6"
           />
         )}
       </div>
