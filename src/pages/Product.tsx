@@ -6,7 +6,7 @@ import MainLayout from '../components/Layout/MainLayout';
 import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
-import NecklaceCustomizer from '../components/NecklaceCustomizer';
+import BagCharmCustomizer from '../components/BagCharmCustomizer';
 import { ShoppingCart } from 'lucide-react';
 
 const Product: React.FC = () => {
@@ -73,13 +73,13 @@ const Product: React.FC = () => {
           
           {/* Description */}
           <p className="text-gray-600 max-w-2xl">
-            Create your perfect charm necklace by selecting a base and choosing charms that reflect your personality. 
+            Create your perfect bag charm by selecting a base chain and choosing charms that reflect your personality. 
             Each combination tells your unique story with elegant craftsmanship and meaningful details.
           </p>
         </div>
 
-        {/* Necklace Customizer */}
-        <NecklaceCustomizer />
+        {/* Bag Charm Customizer */}
+        <BagCharmCustomizer />
         
         {/* Action button */}
         <div className="flex gap-4 mt-12 max-w-md mx-auto lg:mx-0">
