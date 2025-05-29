@@ -6,32 +6,13 @@ import MainLayout from '../components/Layout/MainLayout';
 import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
-import SimpleNecklaceCustomizer from '../components/SimpleNecklaceCustomizer';
+import NecklaceCustomizer from '../components/NecklaceCustomizer';
 import { ShoppingCart } from 'lucide-react';
-
-interface BaseProduct {
-  id: string;
-  name: string;
-  imageUrl: string;
-  price: number;
-  type: 'gold' | 'silver' | 'rose-gold';
-}
-
-interface Charm {
-  id: string;
-  name: string;
-  imageUrl: string;
-  price: number;
-  category: 'letters' | 'symbols' | 'birthstones' | 'zodiac';
-}
 
 const Product: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [selectedBase, setSelectedBase] = useState<BaseProduct | null>(null);
-  const [selectedCharms, setSelectedCharms] = useState<Charm[]>([]);
-  const [totalPrice, setTotalPrice] = useState(0);
   
   const product = products.find(p => p.id === Number(id));
   
@@ -59,46 +40,13 @@ const Product: React.FC = () => {
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 3);
 
-  const handleCustomizationChange = (
-    baseProduct: BaseProduct | null, 
-    charms: Charm[], 
-    price: number
-  ) => {
-    setSelectedBase(baseProduct);
-    setSelectedCharms(charms);
-    setTotalPrice(price);
-  };
-  
   const handleAddToCart = () => {
-    if (!selectedBase) {
-      alert('Please select a base necklace first');
-      return;
-    }
-
-    const productWithCustomization = {
-      ...product,
-      name: `${selectedBase.name} - Customized`,
-      price: totalPrice,
-      salePrice: undefined, // Remove sale price for customized items
-      charms: selectedCharms.length,
-      charmsDetails: {
-        zodiac: selectedCharms.filter(c => c.category === 'zodiac').map(c => c.name),
-        initials: selectedCharms.filter(c => c.category === 'letters').map(c => c.name),
-        symbols: selectedCharms.filter(c => c.category === 'symbols').map(c => c.name),
-        birthstones: selectedCharms.filter(c => c.category === 'birthstones').map(c => c.name),
-      },
-      baseProduct: selectedBase
-    };
-    
-    addToCart(productWithCustomization);
+    addToCart(product);
   };
 
   const goToNextProduct = () => {
     if (nextProductId) {
       navigate(`/product/${nextProductId}`);
-      setSelectedBase(null);
-      setSelectedCharms([]);
-      setTotalPrice(0);
     }
   };
   
@@ -130,20 +78,17 @@ const Product: React.FC = () => {
           </p>
         </div>
 
-        {/* Simple Necklace Customizer */}
-        <SimpleNecklaceCustomizer
-          onCustomizationChange={handleCustomizationChange}
-        />
+        {/* Necklace Customizer */}
+        <NecklaceCustomizer />
         
         {/* Action button */}
         <div className="flex gap-4 mt-12 max-w-md mx-auto lg:mx-0">
           <Button 
             onClick={handleAddToCart}
-            disabled={!selectedBase}
-            className="flex-1 bg-sage-500 hover:bg-sage-600 text-white py-6 disabled:opacity-50"
+            className="flex-1 bg-sage-500 hover:bg-sage-600 text-white py-6"
           >
             <ShoppingCart className="mr-2 h-5 w-5" />
-            ADD TO CART {totalPrice > 0 && `- EGP ${totalPrice.toFixed(2)}`}
+            ADD TO CART - EGP {product.salePrice || product.price}
           </Button>
         </div>
 
