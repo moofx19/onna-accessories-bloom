@@ -6,8 +6,7 @@ import MainLayout from '../components/Layout/MainLayout';
 import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
-import DragDropCharmCustomizer from '../components/DragDropCharmCustomizer';
-import ProductTabNavigation from '../components/ProductTabNavigation';
+import SimpleNecklaceCustomizer from '../components/SimpleNecklaceCustomizer';
 import { ShoppingCart } from 'lucide-react';
 
 interface BaseProduct {
@@ -18,11 +17,12 @@ interface BaseProduct {
   type: 'gold' | 'silver' | 'rose-gold';
 }
 
-interface SelectedCharms {
-  zodiac: string[];
-  initials: string[];
-  symbols: string[];
-  birthstones: string[];
+interface Charm {
+  id: string;
+  name: string;
+  imageUrl: string;
+  price: number;
+  category: 'letters' | 'symbols' | 'birthstones' | 'zodiac';
 }
 
 const Product: React.FC = () => {
@@ -30,12 +30,7 @@ const Product: React.FC = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [selectedBase, setSelectedBase] = useState<BaseProduct | null>(null);
-  const [selectedCharms, setSelectedCharms] = useState<SelectedCharms>({
-    zodiac: [],
-    initials: [],
-    symbols: [],
-    birthstones: []
-  });
+  const [selectedCharms, setSelectedCharms] = useState<Charm[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   
   const product = products.find(p => p.id === Number(id));
@@ -66,7 +61,7 @@ const Product: React.FC = () => {
 
   const handleCustomizationChange = (
     baseProduct: BaseProduct | null, 
-    charms: SelectedCharms, 
+    charms: Charm[], 
     price: number
   ) => {
     setSelectedBase(baseProduct);
@@ -80,14 +75,18 @@ const Product: React.FC = () => {
       return;
     }
 
-    const totalSelectedCharms = Object.values(selectedCharms).flat().length;
     const productWithCustomization = {
       ...product,
       name: `${selectedBase.name} - Customized`,
       price: totalPrice,
       salePrice: undefined, // Remove sale price for customized items
-      charms: totalSelectedCharms,
-      charmsDetails: selectedCharms,
+      charms: selectedCharms.length,
+      charmsDetails: {
+        zodiac: selectedCharms.filter(c => c.category === 'zodiac').map(c => c.name),
+        initials: selectedCharms.filter(c => c.category === 'letters').map(c => c.name),
+        symbols: selectedCharms.filter(c => c.category === 'symbols').map(c => c.name),
+        birthstones: selectedCharms.filter(c => c.category === 'birthstones').map(c => c.name),
+      },
       baseProduct: selectedBase
     };
     
@@ -98,7 +97,7 @@ const Product: React.FC = () => {
     if (nextProductId) {
       navigate(`/product/${nextProductId}`);
       setSelectedBase(null);
-      setSelectedCharms({ zodiac: [], initials: [], symbols: [], birthstones: [] });
+      setSelectedCharms([]);
       setTotalPrice(0);
     }
   };
@@ -106,9 +105,6 @@ const Product: React.FC = () => {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
-        {/* Product Tab Navigation */}
-        <ProductTabNavigation currentProductId={product.id} />
-        
         {/* Product Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-medium text-gray-900 mb-4">{product.name}</h1>
@@ -129,13 +125,13 @@ const Product: React.FC = () => {
           
           {/* Description */}
           <p className="text-gray-600 max-w-2xl">
-            Create your perfect charm necklace by selecting a base and dragging charms directly onto the necklace. 
+            Create your perfect charm necklace by selecting a base and choosing charms that reflect your personality. 
             Each combination tells your unique story with elegant craftsmanship and meaningful details.
           </p>
         </div>
 
-        {/* Drag & Drop Charm Customizer */}
-        <DragDropCharmCustomizer
+        {/* Simple Necklace Customizer */}
+        <SimpleNecklaceCustomizer
           onCustomizationChange={handleCustomizationChange}
         />
         
