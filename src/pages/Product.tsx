@@ -7,7 +7,6 @@ import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import BagCharmCustomizer from '../components/BagCharmCustomizer';
-import { ShoppingCart } from 'lucide-react';
 
 const Product: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,10 +38,6 @@ const Product: React.FC = () => {
   const relatedProducts = products
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 3);
-
-  const handleAddToCart = () => {
-    addToCart(product);
-  };
 
   const goToNextProduct = () => {
     if (nextProductId) {
@@ -80,17 +75,6 @@ const Product: React.FC = () => {
 
         {/* Bag Charm Customizer */}
         <BagCharmCustomizer />
-        
-        {/* Action button */}
-        <div className="flex gap-4 mt-12 max-w-md mx-auto lg:mx-0">
-          <Button 
-            onClick={handleAddToCart}
-            className="flex-1 bg-sage-500 hover:bg-sage-600 text-white py-6"
-          >
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            ADD TO CART - EGP {product.salePrice || product.price}
-          </Button>
-        </div>
 
         {/* Product Info */}
         <div className="mt-8 pt-6 border-t border-gray-200 max-w-md mx-auto lg:mx-0">
