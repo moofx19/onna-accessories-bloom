@@ -22,6 +22,7 @@ export function useProducts() {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch products');
         console.error('Error fetching products:', err);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -50,6 +51,7 @@ export function useProduct(id: number) {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch product');
         console.error('Error fetching product:', err);
+        setProduct(null);
       } finally {
         setLoading(false);
       }
@@ -79,6 +81,7 @@ export function useCategories() {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch categories');
         console.error('Error fetching categories:', err);
+        setCategories([]);
       } finally {
         setLoading(false);
       }
@@ -106,6 +109,7 @@ export function useTags() {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch tags');
         console.error('Error fetching tags:', err);
+        setTags([]);
       } finally {
         setLoading(false);
       }
@@ -133,6 +137,7 @@ export function useSliders() {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch sliders');
         console.error('Error fetching sliders:', err);
+        setSliders([]);
       } finally {
         setLoading(false);
       }
@@ -142,4 +147,32 @@ export function useSliders() {
   }, []);
 
   return { sliders, loading, error };
+}
+
+// Hook for fetching Buy X Get Y promotions
+export function useBuyXGetY() {
+  const [promotions, setPromotions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        setLoading(true);
+        const promotionsData = await apiService.buyXGetY.getAll();
+        setPromotions(promotionsData);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch promotions');
+        console.error('Error fetching promotions:', err);
+        setPromotions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPromotions();
+  }, []);
+
+  return { promotions, loading, error };
 }

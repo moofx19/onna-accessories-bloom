@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, Gift } from 'lucide-react';
 import { Button } from './ui/button';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
@@ -61,19 +61,31 @@ const Cart: React.FC = () => {
           ) : (
             <>
               {cartItems.map((item) => (
-                <div key={`${item.id}-${item.variant || 'default'}-${item.charms || 0}`} className="py-4 border-b border-gray-200 flex">
+                <div key={`${item.id}-${item.variant || 'default'}-${item.charms || 0}-${item.isBonusItem ? 'bonus' : 'regular'}`} className="py-4 border-b border-gray-200 flex">
                   {/* Product image */}
-                  <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-md mr-4">
+                  <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-md mr-4 relative">
                     <img 
                       src={item.imageUrl} 
                       alt={item.name} 
                       className="h-full w-full object-cover object-center" 
                     />
+                    {item.isBonusItem && (
+                      <div className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-1">
+                        <Gift className="h-3 w-3" />
+                      </div>
+                    )}
                   </div>
                   
                   {/* Product details */}
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
+                    <h3 className="text-sm font-medium text-gray-900">
+                      {item.name}
+                      {item.isBonusItem && (
+                        <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                          FREE
+                        </span>
+                      )}
+                    </h3>
                     
                     {/* Variant and charms info */}
                     {(item.variant || item.charms) && (
@@ -85,7 +97,9 @@ const Cart: React.FC = () => {
                     )}
                     
                     <div className="flex items-center mt-1">
-                      {item.salePrice ? (
+                      {item.isBonusItem ? (
+                        <span className="text-sm font-medium text-green-600">FREE</span>
+                      ) : item.salePrice ? (
                         <>
                           <span className="text-sm font-medium text-rose-500">EGP {item.salePrice.toFixed(2)}</span>
                           <span className="ml-2 text-xs text-gray-500 line-through">EGP {item.price.toFixed(2)}</span>
@@ -97,32 +111,40 @@ const Cart: React.FC = () => {
                     
                     {/* Quantity */}
                     <div className="flex items-center mt-2">
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="text-gray-500 hover:text-gray-700"
-                        aria-label="Decrease quantity"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <span className="mx-2 text-gray-600 w-8 text-center">{item.quantity}</span>
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="text-gray-500 hover:text-gray-700"
-                        aria-label="Increase quantity"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
+                      {!item.isBonusItem ? (
+                        <>
+                          <button 
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="text-gray-500 hover:text-gray-700"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <span className="mx-2 text-gray-600 w-8 text-center">{item.quantity}</span>
+                          <button 
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="text-gray-500 hover:text-gray-700"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-sm text-green-600">Bonus: {item.quantity}</span>
+                      )}
                     </div>
                   </div>
                   
                   {/* Remove button */}
-                  <button 
-                    onClick={() => removeFromCart(item.id)}
-                    className="text-gray-400 hover:text-gray-600"
-                    aria-label="Remove item"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  {!item.isBonusItem && (
+                    <button 
+                      onClick={() => removeFromCart(item.id)}
+                      className="text-gray-400 hover:text-gray-600"
+                      aria-label="Remove item"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               ))}
               

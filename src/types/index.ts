@@ -24,10 +24,17 @@ export interface Product {
     price: number;
     type: 'gold' | 'silver' | 'rose-gold';
   };
+  buyXGetY?: {
+    id: number;
+    X: string;
+    Y: string;
+    expiration: string;
+  }[];
 }
 
 export interface CartItem extends Product {
   quantity: number;
+  isBonusItem?: boolean;
 }
 
 export type SortOption = "newest" | "price-low" | "price-high";
