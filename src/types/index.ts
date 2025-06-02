@@ -10,6 +10,7 @@ export interface Product {
   isSale?: boolean;
   variant?: string;
   charms?: number;
+  tags?: string[];
   charmsDetails?: {
     zodiac: string[];
     initials: string[];
@@ -35,6 +36,7 @@ export interface FilterOptions {
   minPrice: number;
   maxPrice: number;
   categories: string[];
+  tags?: string[];
   onSaleOnly: boolean;
   sortBy: SortOption;
 }

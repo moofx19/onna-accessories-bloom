@@ -1,4 +1,3 @@
-
 import { Product } from "../types";
 
 export const products: Product[] = [
@@ -9,6 +8,7 @@ export const products: Product[] = [
     salePrice: 650.00,
     imageUrl: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
     category: "necklaces",
+    tags: ["customizable", "charms", "personalized", "gift"],
     isNew: true,
     isSale: true
   },
@@ -17,7 +17,8 @@ export const products: Product[] = [
     name: "Pearl Drop Earrings",
     price: 465.00,
     imageUrl: "https://images.unsplash.com/photo-1574534884553-d5f5e0089263?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    category: "earrings"
+    category: "earrings",
+    tags: ["pearls", "elegant", "classic"]
   },
   {
     id: 3,
@@ -26,6 +27,7 @@ export const products: Product[] = [
     salePrice: 329.99,
     imageUrl: "https://images.unsplash.com/photo-1635767798638-3665c3f7c9ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
     category: "bracelets",
+    tags: ["silver", "chain", "minimalist"],
     isSale: true
   },
   {
@@ -34,6 +36,7 @@ export const products: Product[] = [
     price: 349.99,
     imageUrl: "https://images.unsplash.com/photo-1630019852942-f89202989a59?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
     category: "earrings",
+    tags: ["gold", "hoops", "dainty", "everyday"],
     isNew: true
   },
   {
@@ -41,7 +44,8 @@ export const products: Product[] = [
     name: "Layered Gold Necklace",
     price: 579.99,
     imageUrl: "https://images.unsplash.com/photo-1611085583191-a3b181a88401?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    category: "necklaces"
+    category: "necklaces",
+    tags: ["gold", "layered", "trendy"]
   },
   {
     id: 6,
@@ -50,6 +54,7 @@ export const products: Product[] = [
     salePrice: 399.99,
     imageUrl: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
     category: "bracelets",
+    tags: ["charms", "customizable", "gift", "personalized"],
     isSale: true
   },
   {
@@ -57,7 +62,8 @@ export const products: Product[] = [
     name: "Statement Earrings",
     price: 459.99,
     imageUrl: "https://images.unsplash.com/photo-1561172937-76ef8ed33c12?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    category: "earrings"
+    category: "earrings",
+    tags: ["statement", "bold", "evening"]
   },
   {
     id: 8,
@@ -65,6 +71,7 @@ export const products: Product[] = [
     price: 345.00,
     imageUrl: "https://images.unsplash.com/photo-1612903252418-ac93af19963d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
     category: "necklaces",
+    tags: ["delicate", "chain", "minimalist", "everyday"],
     isNew: true
   },
   {
@@ -74,6 +81,7 @@ export const products: Product[] = [
     salePrice: 229.99,
     imageUrl: "https://images.unsplash.com/photo-1561144257-e32e8efc6c4f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
     category: "bracelets",
+    tags: ["beaded", "colorful", "casual"],
     isSale: true
   },
   {
@@ -83,6 +91,7 @@ export const products: Product[] = [
     salePrice: 569.99,
     imageUrl: "https://images.unsplash.com/photo-1575863438850-fb1c06a38885?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
     category: "necklaces",
+    tags: ["crystal", "drop", "elegant", "special occasion"],
     isSale: true
   },
   {
@@ -90,14 +99,16 @@ export const products: Product[] = [
     name: "Minimalist Gold Bracelet",
     price: 399.99,
     imageUrl: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    category: "bracelets"
+    category: "bracelets",
+    tags: ["minimalist", "gold", "simple", "everyday"]
   },
   {
     id: 12,
     name: "Pearl Stud Earrings",
     price: 285.00,
     imageUrl: "https://images.unsplash.com/photo-1570113230374-6507f611521d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    category: "earrings"
+    category: "earrings",
+    tags: ["pearls", "studs", "classic", "timeless"]
   }
 ];
 

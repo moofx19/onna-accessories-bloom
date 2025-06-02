@@ -17,6 +17,7 @@ const Shop: React.FC = () => {
     minPrice: minProductPrice,
     maxPrice: maxProductPrice,
     categories: [],
+    tags: [],
     onSaleOnly: false,
     sortBy: 'newest'
   });
@@ -33,6 +34,17 @@ const Shop: React.FC = () => {
       // Category filter
       if (filters.categories.length > 0 && !filters.categories.includes(product.category)) {
         return false;
+      }
+      
+      // Tags filter
+      if (filters.tags && filters.tags.length > 0) {
+        const productTags = product.tags || [];
+        const hasMatchingTag = filters.tags.some(filterTag => 
+          productTags.includes(filterTag)
+        );
+        if (!hasMatchingTag) {
+          return false;
+        }
       }
       
       // Sale filter

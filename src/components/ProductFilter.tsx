@@ -32,6 +32,9 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange, currentFi
   // Get all unique categories
   const categories = Array.from(new Set(products.map(p => p.category)));
   
+  // Get all unique tags
+  const allTags = Array.from(new Set(products.flatMap(p => p.tags || [])));
+  
   const handlePriceChange = (values: number[]) => {
     setPriceRange(values);
   };
@@ -53,6 +56,16 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange, currentFi
     });
   };
   
+  const handleTagToggle = (tag: string) => {
+    const newTags = currentFilters.tags?.includes(tag)
+      ? currentFilters.tags.filter(t => t !== tag)
+      : [...(currentFilters.tags || []), tag];
+    
+    onFilterChange({
+      tags: newTags
+    });
+  };
+  
   const handleSaleToggle = () => {
     onFilterChange({
       onSaleOnly: !currentFilters.onSaleOnly
@@ -71,6 +84,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange, currentFi
       minPrice: minProductPrice,
       maxPrice: maxProductPrice,
       categories: [],
+      tags: [],
       onSaleOnly: false,
       sortBy: 'newest'
     });
@@ -111,8 +125,8 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange, currentFi
                 className="mb-4"
               />
               <div className="flex justify-between text-sm text-gray-600">
-                <span>${priceRange[0].toFixed(2)}</span>
-                <span>${priceRange[1].toFixed(2)}</span>
+                <span>EGP {priceRange[0].toFixed(2)}</span>
+                <span>EGP {priceRange[1].toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -138,6 +152,30 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange, currentFi
               ))}
             </div>
           </div>
+          
+          {/* Tags filter */}
+          {allTags.length > 0 && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">Tags</h3>
+              <div className="space-y-2">
+                {allTags.map((tag) => (
+                  <div key={tag} className="flex items-center">
+                    <Checkbox
+                      id={`tag-${tag}`}
+                      checked={currentFilters.tags?.includes(tag) || false}
+                      onCheckedChange={() => handleTagToggle(tag)}
+                    />
+                    <Label
+                      htmlFor={`tag-${tag}`}
+                      className="ml-2 text-gray-600 capitalize cursor-pointer"
+                    >
+                      {tag}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           {/* Sale filter */}
           <div>
