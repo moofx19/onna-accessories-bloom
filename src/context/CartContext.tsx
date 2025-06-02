@@ -2,8 +2,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { CartItem, Product } from '../types';
 import { toast } from '../components/ui/sonner';
-import { useAuth } from './AuthContext';
-import { useBuyXGetY } from '../hooks/useApi';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -24,8 +22,6 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { isAuthenticated, setShowLoginDialog } = useAuth();
-  const { promotions } = useBuyXGetY();
 
   // Load cart from localStorage on component mount
   useEffect(() => {
@@ -48,45 +44,41 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const closeCart = () => setIsCartOpen(false);
 
   const applyBuyXGetYPromotions = () => {
-    if (!promotions || promotions.length === 0) return;
-
     setCartItems(prevItems => {
       let updatedItems = [...prevItems];
       let addedBonusItems = false;
 
-      promotions.forEach(promo => {
-        if (new Date(promo.expiration) > new Date()) {
-          const xQuantity = parseInt(promo.X);
-          const yQuantity = parseInt(promo.Y);
+      // Remove existing bonus items first
+      updatedItems = updatedItems.filter(item => !item.isBonusItem);
 
-          // Check if user has enough items to qualify for the promotion
-          const totalItemsInCart = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
-          
-          if (totalItemsInCart >= xQuantity) {
-            const qualifyingPairs = Math.floor(totalItemsInCart / xQuantity);
-            const bonusItemsToAdd = qualifyingPairs * yQuantity;
+      // Check each product's Buy X Get Y promotions
+      updatedItems.forEach(cartItem => {
+        if (cartItem.buyXGetY && cartItem.buyXGetY.length > 0) {
+          cartItem.buyXGetY.forEach(promo => {
+            if (new Date(promo.expiration) > new Date()) {
+              const xQuantity = parseInt(promo.X);
+              const yQuantity = parseInt(promo.Y);
 
-            // Find a product to give as bonus (first item in cart)
-            const bonusProduct = updatedItems[0];
-            
-            if (bonusProduct && bonusItemsToAdd > 0) {
-              const existingBonusItem = updatedItems.find(item => 
-                item.id === bonusProduct.id && item.isBonusItem
-              );
+              // Check if this specific item qualifies
+              if (cartItem.quantity >= xQuantity) {
+                const qualifyingPairs = Math.floor(cartItem.quantity / xQuantity);
+                const bonusItemsToAdd = qualifyingPairs * yQuantity;
 
-              if (existingBonusItem) {
-                existingBonusItem.quantity = bonusItemsToAdd;
-              } else {
-                updatedItems.push({
-                  ...bonusProduct,
-                  quantity: bonusItemsToAdd,
-                  isBonusItem: true,
-                  price: 0 // Bonus items are free
-                });
+                if (bonusItemsToAdd > 0) {
+                  const bonusItem: CartItem = {
+                    ...cartItem,
+                    quantity: bonusItemsToAdd,
+                    isBonusItem: true,
+                    price: 0, // Bonus items are free
+                    id: cartItem.id + 10000 // Unique ID for bonus item
+                  };
+                  
+                  updatedItems.push(bonusItem);
+                  addedBonusItems = true;
+                }
               }
-              addedBonusItems = true;
             }
-          }
+          });
         }
       });
 
@@ -101,15 +93,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addToCart = (product: Product) => {
-    // Check if user needs to be logged in for cart operations
-    if (!isAuthenticated) {
-      setShowLoginDialog(true);
-      toast('Please sign in', {
-        description: 'You need to sign in to add items to your cart.',
-      });
-      return;
-    }
-
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => 
         item.id === product.id && 

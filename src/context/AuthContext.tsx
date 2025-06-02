@@ -11,6 +11,11 @@ interface User {
   phone: string;
 }
 
+interface AuthResponse {
+  token: string;
+  user: User;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -48,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await apiService.auth.login({ email, password });
+      const response = await apiService.auth.login({ email, password }) as AuthResponse;
       
       if (response.token && response.user) {
         setToken(response.token);
@@ -77,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (userData: { email: string; password: string; first_name: string; last_name: string; phone: string }): Promise<boolean> => {
     try {
-      const response = await apiService.auth.register(userData);
+      const response = await apiService.auth.register(userData) as AuthResponse;
       
       if (response.token && response.user) {
         setToken(response.token);

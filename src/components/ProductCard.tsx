@@ -12,6 +12,13 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   
+  // Check if product has active Buy X Get Y promotion
+  const hasActivePromotion = product.buyXGetY && product.buyXGetY.length > 0 && 
+    product.buyXGetY.some(promo => new Date(promo.expiration) > new Date());
+  
+  const activePromotion = hasActivePromotion ? 
+    product.buyXGetY?.find(promo => new Date(promo.expiration) > new Date()) : null;
+  
   return (
     <div className="group relative">
       <div className="overflow-hidden rounded-md bg-gray-100 mb-4">
@@ -21,20 +28,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             alt={product.name} 
             className="h-72 w-full object-cover object-center product-card-image"
           />
-          {(product.isNew || product.isSale) && (
-            <div className="absolute top-2 right-2">
-              {product.isNew && (
-                <span className="bg-sage-500 text-white text-xs font-medium px-2.5 py-1 rounded-md inline-block mr-1">
-                  NEW
-                </span>
-              )}
-              {product.isSale && (
-                <span className="bg-rose-500 text-white text-xs font-medium px-2.5 py-1 rounded-md inline-block">
-                  SALE
-                </span>
-              )}
-            </div>
-          )}
+          <div className="absolute top-2 right-2 flex flex-col gap-1">
+            {product.isNew && (
+              <span className="bg-sage-500 text-white text-xs font-medium px-2.5 py-1 rounded-md">
+                NEW
+              </span>
+            )}
+            {product.isSale && (
+              <span className="bg-rose-500 text-white text-xs font-medium px-2.5 py-1 rounded-md">
+                SALE
+              </span>
+            )}
+            {activePromotion && (
+              <span className="bg-green-500 text-white text-xs font-medium px-2.5 py-1 rounded-md">
+                Buy {activePromotion.X} Get {activePromotion.Y}
+              </span>
+            )}
+          </div>
         </Link>
       </div>
       
@@ -54,6 +64,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <span className="font-medium text-gray-900">EGP {product.price.toFixed(2)}</span>
           )}
         </div>
+        {activePromotion && (
+          <p className="text-sm text-green-600 mb-2">
+            Buy {activePromotion.X} Get {activePromotion.Y} Free!
+          </p>
+        )}
         <Button 
           onClick={() => addToCart(product)} 
           variant="outline" 

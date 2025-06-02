@@ -19,6 +19,7 @@ export function transformApiProduct(apiProduct: ApiProduct): Product {
     isNew: false, // API doesn't provide this field
     isSale: !!salePrice,
     tags: apiProduct.tag_id ? [apiProduct.tag_id] : [],
+    buyXGetY: apiProduct.buy_xget_y || [],
   };
 }
 

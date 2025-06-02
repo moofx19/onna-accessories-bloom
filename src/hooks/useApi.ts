@@ -159,7 +159,7 @@ export function useBuyXGetY() {
     const fetchPromotions = async () => {
       try {
         setLoading(true);
-        const promotionsData = await apiService.buyXGetY.getAll();
+        const promotionsData: any[] = await apiService.buyXGetY.getAll();
         setPromotions(promotionsData);
         setError(null);
       } catch (err) {
