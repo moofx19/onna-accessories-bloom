@@ -1,21 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
-import { heroSlides } from '../data/products';
 import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSliders } from '../hooks/useApi';
+import { transformApiSlider } from '../utils/dataTransform';
 
 const HeroSlider: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const { sliders, loading, error } = useSliders();
+  
+  // Transform API sliders to hero slides format
+  const heroSlides = sliders.filter(slider => slider.is_active === '1').map(transformApiSlider);
 
   // Auto slide effect
   useEffect(() => {
+    if (heroSlides.length === 0) return;
+    
     const timer = setTimeout(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 5000);
     
     return () => clearTimeout(timer);
-  }, [currentSlide]);
+  }, [currentSlide, heroSlides.length]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
@@ -24,6 +31,31 @@ const HeroSlider: React.FC = () => {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
   };
+
+  if (loading) {
+    return (
+      <div className="relative w-full h-96 bg-gray-200 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sage-500"></div>
+      </div>
+    );
+  }
+
+  if (error || heroSlides.length === 0) {
+    return (
+      <div className="relative w-full h-96 bg-sage-100 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-sage-800 mb-4">Welcome to Our Store</h1>
+          <p className="text-lg text-sage-600 mb-6">Discover our beautiful jewelry collection</p>
+          <Button 
+            asChild
+            className="bg-sage-600 text-white hover:bg-sage-700 px-8 py-6"
+          >
+            <Link to="/shop">Shop Now</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full overflow-hidden">

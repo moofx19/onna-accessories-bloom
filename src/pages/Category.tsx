@@ -3,27 +3,47 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import ProductFilter from '../components/ProductFilter';
-import { products } from '../data/products';
 import { Product, FilterOptions, SortOption } from '../types';
 import MainLayout from '../components/Layout/MainLayout';
+import { useProducts } from '../hooks/useApi';
 
 const CategoryPage: React.FC = () => {
   const { category } = useParams<{ category: string }>();
+  const { products: allProducts, loading, error } = useProducts();
+  
+  // Get products in this category
+  const categoryProducts = allProducts.filter(p => p.category === category);
   
   // Get min and max prices from products in this category
-  const categoryProducts = products.filter(p => p.category === category);
   const allPrices = categoryProducts.map(p => p.salePrice || p.price);
-  const minProductPrice = Math.min(...allPrices);
-  const maxProductPrice = Math.max(...allPrices);
+  const minProductPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
+  const maxProductPrice = allPrices.length > 0 ? Math.max(...allPrices) : 1000;
   
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(categoryProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState<FilterOptions>({
     minPrice: minProductPrice,
     maxPrice: maxProductPrice,
     categories: [category || ''],
+    tags: [],
     onSaleOnly: false,
     sortBy: 'newest'
   });
+
+  // Update filters when products load
+  useEffect(() => {
+    if (categoryProducts.length > 0) {
+      const allPrices = categoryProducts.map(p => p.salePrice || p.price);
+      const minPrice = Math.min(...allPrices);
+      const maxPrice = Math.max(...allPrices);
+      
+      setFilters(prev => ({
+        ...prev,
+        minPrice: minPrice,
+        maxPrice: maxPrice,
+        categories: [category || '']
+      }));
+    }
+  }, [categoryProducts.length, category]);
   
   useEffect(() => {
     let result = categoryProducts.filter(product => {
@@ -32,6 +52,17 @@ const CategoryPage: React.FC = () => {
       // Price filter
       if (productPrice < filters.minPrice || productPrice > filters.maxPrice) {
         return false;
+      }
+      
+      // Tags filter
+      if (filters.tags && filters.tags.length > 0) {
+        const productTags = product.tags || [];
+        const hasMatchingTag = filters.tags.some(filterTag => 
+          productTags.includes(filterTag)
+        );
+        if (!hasMatchingTag) {
+          return false;
+        }
       }
       
       // Sale filter
@@ -46,14 +77,13 @@ const CategoryPage: React.FC = () => {
     result = sortProducts(result, filters.sortBy);
     
     setFilteredProducts(result);
-  }, [filters, category]);
+  }, [filters, categoryProducts]);
   
   const sortProducts = (products: Product[], sortOption: SortOption): Product[] => {
     const sortedProducts = [...products];
     
     switch (sortOption) {
       case 'newest':
-        // Assume products are already sorted by newest in the data
         return sortedProducts;
       case 'price-low':
         return sortedProducts.sort((a, b) => {
@@ -87,6 +117,31 @@ const CategoryPage: React.FC = () => {
   };
   
   const categoryTitle = category ? category.charAt(0).toUpperCase() + category.slice(1) : '';
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sage-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading products...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <p className="text-red-500 text-lg">Error loading products: {error}</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
   
   return (
     <MainLayout>
@@ -99,6 +154,7 @@ const CategoryPage: React.FC = () => {
             <ProductFilter 
               onFilterChange={handleFilterChange}
               currentFilters={filters}
+              products={categoryProducts}
             />
           </div>
           

@@ -2,20 +2,22 @@
 import React, { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import ProductFilter from '../components/ProductFilter';
-import { products } from '../data/products';
 import { Product, FilterOptions, SortOption } from '../types';
 import MainLayout from '../components/Layout/MainLayout';
+import { useProducts } from '../hooks/useApi';
 
 const HotDeals: React.FC = () => {
+  const { products: allProducts, loading, error } = useProducts();
+  
   // Get sale products only
-  const saleProducts = products.filter(p => p.isSale);
+  const saleProducts = allProducts.filter(p => p.isSale);
   
   // Get min and max prices from sale products
   const allPrices = saleProducts.map(p => p.salePrice || p.price);
-  const minProductPrice = Math.min(...allPrices);
-  const maxProductPrice = Math.max(...allPrices);
+  const minProductPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
+  const maxProductPrice = allPrices.length > 0 ? Math.max(...allPrices) : 1000;
   
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(saleProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState<FilterOptions>({
     minPrice: minProductPrice,
     maxPrice: maxProductPrice,
@@ -24,6 +26,21 @@ const HotDeals: React.FC = () => {
     onSaleOnly: true,
     sortBy: 'newest'
   });
+
+  // Update filters when products load
+  useEffect(() => {
+    if (saleProducts.length > 0) {
+      const allPrices = saleProducts.map(p => p.salePrice || p.price);
+      const minPrice = Math.min(...allPrices);
+      const maxPrice = Math.max(...allPrices);
+      
+      setFilters(prev => ({
+        ...prev,
+        minPrice: minPrice,
+        maxPrice: maxPrice
+      }));
+    }
+  }, [saleProducts.length]);
   
   useEffect(() => {
     let result = saleProducts.filter(product => {
@@ -57,14 +74,13 @@ const HotDeals: React.FC = () => {
     result = sortProducts(result, filters.sortBy);
     
     setFilteredProducts(result);
-  }, [filters]);
+  }, [filters, saleProducts]);
   
   const sortProducts = (products: Product[], sortOption: SortOption): Product[] => {
     const sortedProducts = [...products];
     
     switch (sortOption) {
       case 'newest':
-        // Assume products are already sorted by newest in the data
         return sortedProducts;
       case 'price-low':
         return sortedProducts.sort((a, b) => {
@@ -94,6 +110,31 @@ const HotDeals: React.FC = () => {
       ...newFilters
     }));
   };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sage-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading hot deals...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <p className="text-red-500 text-lg">Error loading products: {error}</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
   
   return (
     <MainLayout>
@@ -109,6 +150,7 @@ const HotDeals: React.FC = () => {
             <ProductFilter 
               onFilterChange={handleFilterChange}
               currentFilters={filters}
+              products={saleProducts}
             />
           </div>
           

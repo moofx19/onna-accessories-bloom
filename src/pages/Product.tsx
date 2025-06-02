@@ -1,22 +1,34 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { products } from '../data/products';
 import MainLayout from '../components/Layout/MainLayout';
 import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import BagCharmCustomizer from '../components/BagCharmCustomizer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { useProduct, useProducts } from '../hooks/useApi';
 
 const Product: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   
-  const product = products.find(p => p.id === Number(id));
+  const { product, loading, error } = useProduct(Number(id));
+  const { products } = useProducts();
   
-  if (!product) {
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-16 text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sage-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading product...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error || !product) {
     return (
       <MainLayout>
         <div className="container mx-auto px-4 py-16 text-center">
@@ -64,6 +76,18 @@ const Product: React.FC = () => {
               <span className="bg-rose-500 text-white text-xs font-medium px-2.5 py-1 rounded-md inline-block">
                 SALE
               </span>
+            )}
+          </div>
+          
+          {/* Price */}
+          <div className="flex items-center mb-4">
+            {product.salePrice ? (
+              <>
+                <span className="text-2xl font-medium text-rose-500">EGP {product.salePrice.toFixed(2)}</span>
+                <span className="ml-3 text-lg text-gray-500 line-through">EGP {product.price.toFixed(2)}</span>
+              </>
+            ) : (
+              <span className="text-2xl font-medium text-gray-900">EGP {product.price.toFixed(2)}</span>
             )}
           </div>
           
