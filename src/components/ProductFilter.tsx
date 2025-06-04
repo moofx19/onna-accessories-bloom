@@ -33,11 +33,19 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange, currentFi
   const minProductPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
   const maxProductPrice = allPrices.length > 0 ? Math.max(...allPrices) : 1000;
   
-  // Get all unique categories from products
-  const productCategories = Array.from(new Set(products.map(p => p.category)));
+  // Transform API categories for display
+  const displayCategories = categories.filter(cat => cat.Active === '1').map(cat => ({
+    id: cat.id.toString(),
+    name: cat.title.toLowerCase(),
+    displayName: cat.title
+  }));
   
-  // Get all unique tags from products
-  const productTags = Array.from(new Set(products.flatMap(p => p.tags || [])));
+  // Transform API tags for display
+  const displayTags = tags.map(tag => ({
+    id: tag.id.toString(),
+    name: tag.name.toLowerCase(),
+    displayName: tag.name
+  }));
   
   const handlePriceChange = (values: number[]) => {
     setPriceRange(values);
@@ -50,20 +58,20 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange, currentFi
     });
   };
   
-  const handleCategoryToggle = (category: string) => {
-    const newCategories = currentFilters.categories.includes(category)
-      ? currentFilters.categories.filter(c => c !== category)
-      : [...currentFilters.categories, category];
+  const handleCategoryToggle = (categoryName: string) => {
+    const newCategories = currentFilters.categories.includes(categoryName)
+      ? currentFilters.categories.filter(c => c !== categoryName)
+      : [...currentFilters.categories, categoryName];
     
     onFilterChange({
       categories: newCategories
     });
   };
   
-  const handleTagToggle = (tag: string) => {
-    const newTags = currentFilters.tags?.includes(tag)
-      ? currentFilters.tags.filter(t => t !== tag)
-      : [...(currentFilters.tags || []), tag];
+  const handleTagToggle = (tagId: string) => {
+    const newTags = currentFilters.tags?.includes(tagId)
+      ? currentFilters.tags.filter(t => t !== tagId)
+      : [...(currentFilters.tags || []), tagId];
     
     onFilterChange({
       tags: newTags
@@ -142,18 +150,18 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange, currentFi
               <p className="text-sm text-gray-500">Loading categories...</p>
             ) : (
               <div className="space-y-2">
-                {productCategories.map((category) => (
-                  <div key={category} className="flex items-center">
+                {displayCategories.map((category) => (
+                  <div key={category.id} className="flex items-center">
                     <Checkbox
-                      id={`category-${category}`}
-                      checked={currentFilters.categories.includes(category)}
-                      onCheckedChange={() => handleCategoryToggle(category)}
+                      id={`category-${category.id}`}
+                      checked={currentFilters.categories.includes(category.name)}
+                      onCheckedChange={() => handleCategoryToggle(category.name)}
                     />
                     <Label
-                      htmlFor={`category-${category}`}
+                      htmlFor={`category-${category.id}`}
                       className="ml-2 text-gray-600 capitalize cursor-pointer"
                     >
-                      {category}
+                      {category.displayName}
                     </Label>
                   </div>
                 ))}
@@ -162,25 +170,25 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange, currentFi
           </div>
           
           {/* Tags filter */}
-          {productTags.length > 0 && (
+          {displayTags.length > 0 && (
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-3">Tags</h3>
               {tagsLoading ? (
                 <p className="text-sm text-gray-500">Loading tags...</p>
               ) : (
                 <div className="space-y-2">
-                  {productTags.map((tag) => (
-                    <div key={tag} className="flex items-center">
+                  {displayTags.map((tag) => (
+                    <div key={tag.id} className="flex items-center">
                       <Checkbox
-                        id={`tag-${tag}`}
-                        checked={currentFilters.tags?.includes(tag) || false}
-                        onCheckedChange={() => handleTagToggle(tag)}
+                        id={`tag-${tag.id}`}
+                        checked={currentFilters.tags?.includes(tag.id) || false}
+                        onCheckedChange={() => handleTagToggle(tag.id)}
                       />
                       <Label
-                        htmlFor={`tag-${tag}`}
+                        htmlFor={`tag-${tag.id}`}
                         className="ml-2 text-gray-600 capitalize cursor-pointer"
                       >
-                        {tag}
+                        {tag.displayName}
                       </Label>
                     </div>
                   ))}

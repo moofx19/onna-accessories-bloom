@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import MainLayout from '../components/Layout/MainLayout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,15 +14,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import { usePromoCodes, validatePromoCode } from '../hooks/usePromoCodes';
 
 const Checkout: React.FC = () => {
   const { cartItems, getCartTotal, clearCart } = useCart();
+  const { promoCodes } = usePromoCodes();
   const navigate = useNavigate();
   
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedPromoCode, setAppliedPromoCode] = useState<any>(null);
+  const [promoError, setPromoError] = useState('');
+  
   const subtotal = getCartTotal();
-  const shipping = subtotal > 50 ? 0 : 5.99;
+  const promoDiscount = appliedPromoCode ? (subtotal * appliedPromoCode.discount / 100) : 0;
+  const shipping = (appliedPromoCode?.isFreeShip || subtotal > 50) ? 0 : 5.99;
   const tax = subtotal * 0.08; // 8% tax rate
-  const total = subtotal + shipping + tax;
+  const total = subtotal - promoDiscount + shipping + tax;
+  
+  const handleApplyPromoCode = () => {
+    if (!promoCodeInput.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+    
+    const validation = validatePromoCode(promoCodeInput, promoCodes);
+    
+    if (validation.valid) {
+      setAppliedPromoCode(validation);
+      setPromoError('');
+      toast('Promo code applied successfully!');
+    } else {
+      setPromoError(validation.error || 'Invalid promo code');
+      setAppliedPromoCode(null);
+    }
+  };
+  
+  const handleRemovePromoCode = () => {
+    setAppliedPromoCode(null);
+    setPromoCodeInput('');
+    setPromoError('');
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,7 +174,7 @@ const Checkout: React.FC = () => {
                 type="submit"
                 className="w-full bg-sage-500 hover:bg-sage-600 text-white py-6"
               >
-                Place Order (${total.toFixed(2)})
+                Place Order (EGP {total.toFixed(2)})
               </Button>
             </form>
           </div>
@@ -168,35 +198,87 @@ const Checkout: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-medium text-gray-900 truncate">{item.name}</h3>
                       <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                      {item.isBonusItem && (
+                        <p className="text-sm text-green-600">Free (Buy X Get Y)</p>
+                      )}
                     </div>
                     
                     <div className="text-right">
                       <p className="text-sm font-medium text-gray-900">
-                        ${((item.salePrice || item.price) * item.quantity).toFixed(2)}
+                        {item.isBonusItem ? 'Free' : `EGP ${((item.salePrice || item.price) * item.quantity).toFixed(2)}`}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
               
+              {/* Promo Code Section */}
+              <div className="mt-6 pt-6 border-t border-sage-200">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Promo Code</h3>
+                {!appliedPromoCode ? (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter promo code"
+                        value={promoCodeInput}
+                        onChange={(e) => setPromoCodeInput(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleApplyPromoCode}
+                        className="text-sage-700 border-sage-300"
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                    {promoError && (
+                      <p className="text-sm text-red-500">{promoError}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-md">
+                    <span className="text-sm text-green-700 font-medium">
+                      {appliedPromoCode.code.name} ({appliedPromoCode.discount}% off)
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemovePromoCode}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                )}
+              </div>
+              
               <div className="space-y-2 mt-6 pt-6 border-t border-sage-200">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Subtotal</span>
-                  <span className="text-sm font-medium text-gray-900">${subtotal.toFixed(2)}</span>
+                  <span className="text-sm font-medium text-gray-900">EGP {subtotal.toFixed(2)}</span>
                 </div>
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-green-600">Promo Discount</span>
+                    <span className="text-sm font-medium text-green-600">-EGP {promoDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Shipping</span>
                   <span className="text-sm font-medium text-gray-900">
-                    {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
+                    {shipping === 0 ? 'Free' : `EGP ${shipping.toFixed(2)}`}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Tax</span>
-                  <span className="text-sm font-medium text-gray-900">${tax.toFixed(2)}</span>
+                  <span className="text-sm font-medium text-gray-900">EGP {tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between pt-4 border-t border-sage-200">
                   <span className="text-base font-medium text-gray-900">Total</span>
-                  <span className="text-base font-medium text-gray-900">${total.toFixed(2)}</span>
+                  <span className="text-base font-medium text-gray-900">EGP {total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

@@ -3,14 +3,16 @@ import React from 'react';
 import HeroSlider from '../components/HeroSlider';
 import ProductCard from '../components/ProductCard';
 import { Button } from '../components/ui/button';
-import { products } from '../data/products';
 import { Link } from 'react-router-dom';
 import MainLayout from '../components/Layout/MainLayout';
+import { useProducts } from '../hooks/useApi';
 
 const Home: React.FC = () => {
-  // Get featured products (first 6)
+  const { products, loading, error } = useProducts();
+  
+  // Get featured products (products with sale or new status, limited to 6)
   const featuredProducts = products
-    .filter(product => product.isNew || product.isSale)
+    .filter(product => product.isSale || product.isNew || product.buyXGetY?.length > 0)
     .slice(0, 6);
   
   return (
@@ -30,22 +32,46 @@ const Home: React.FC = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-          
-          <div className="mt-12 text-center">
-            <Button 
-              asChild
-              variant="outline" 
-              size="lg" 
-              className="border-sage-300 text-sage-700 hover:bg-sage-50"
-            >
-              <Link to="/shop">View All Products</Link>
-            </Button>
-          </div>
+          {loading ? (
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sage-500 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading featured products...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center">
+              <p className="text-red-500">Error loading products: {error}</p>
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-8">
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              
+              <div className="mt-12 text-center">
+                <Button 
+                  asChild
+                  variant="outline" 
+                  size="lg" 
+                  className="border-sage-300 text-sage-700 hover:bg-sage-50"
+                >
+                  <Link to="/shop">View All Products</Link>
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center">
+              <p className="text-gray-600">No featured products available at the moment.</p>
+              <Button 
+                asChild
+                variant="outline" 
+                className="border-sage-300 text-sage-700 hover:bg-sage-50 mt-4"
+              >
+                <Link to="/shop">Browse All Products</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </section>
       
