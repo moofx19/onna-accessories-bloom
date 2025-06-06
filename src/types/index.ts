@@ -1,4 +1,3 @@
-
 export interface Product {
   id: number;
   name: string;
@@ -30,6 +29,14 @@ export interface Product {
     Y: string;
     expiration: string;
   }[];
+  description?: string;
+  images?: string[];
+  categoryName?: string;
+  hasAddons?: boolean;
+  addons?: any[];
+  color?: any;
+  sku?: string;
+  stock?: number;
 }
 
 export interface CartItem extends Product {

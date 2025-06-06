@@ -1,4 +1,3 @@
-
 import { ApiProduct, ApiCategory, ApiTag, ApiSlider } from '../types/api';
 import { Product } from '../types';
 
@@ -12,6 +11,11 @@ export function transformApiProduct(apiProduct: ApiProduct): Product {
     `https://test.kogear.store/storage/${apiProduct.product_image[0].image}` : 
     'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
   
+  // Get all product images
+  const allImages = apiProduct.product_image ? 
+    apiProduct.product_image.map(img => `https://test.kogear.store/storage/${img.image}`) : 
+    ['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'];
+  
   return {
     id: apiProduct.id,
     name: apiProduct.name,
@@ -23,6 +27,14 @@ export function transformApiProduct(apiProduct: ApiProduct): Product {
     isSale: !!salePrice,
     tags: apiProduct.tag_id ? [apiProduct.tag_id] : [],
     buyXGetY: apiProduct.buy_xget_y || [],
+    description: apiProduct.description || '',
+    images: allImages,
+    categoryName: apiProduct.category?.title || 'Uncategorized',
+    hasAddons: apiProduct.hasAddons === '1',
+    addons: apiProduct.addons || [],
+    color: apiProduct.color,
+    sku: apiProduct.sku,
+    stock: parseFloat(apiProduct.AtStock || '0')
   };
 }
 
