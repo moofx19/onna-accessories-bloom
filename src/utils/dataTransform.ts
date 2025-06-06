@@ -7,15 +7,18 @@ export function transformApiProduct(apiProduct: ApiProduct): Product {
   const basePrice = parseFloat(apiProduct.price);
   const salePrice = apiProduct.PriceAfterDiscount ? parseFloat(apiProduct.PriceAfterDiscount) : undefined;
   
+  // Handle cases where product_image might be undefined or empty
+  const imageUrl = apiProduct.product_image && apiProduct.product_image.length > 0 && apiProduct.product_image[0]?.image ? 
+    `https://test.kogear.store/storage/${apiProduct.product_image[0].image}` : 
+    'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
+  
   return {
     id: apiProduct.id,
     name: apiProduct.name,
     price: basePrice,
     salePrice: salePrice,
-    imageUrl: apiProduct.product_image[0]?.image ? 
-      `https://test.kogear.store/storage/${apiProduct.product_image[0].image}` : 
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    category: apiProduct.category.title.toLowerCase(),
+    imageUrl: imageUrl,
+    category: apiProduct.category?.title?.toLowerCase() || 'uncategorized',
     isNew: false, // API doesn't provide this field
     isSale: !!salePrice,
     tags: apiProduct.tag_id ? [apiProduct.tag_id] : [],
