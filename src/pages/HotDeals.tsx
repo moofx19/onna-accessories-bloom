@@ -4,16 +4,13 @@ import ProductCard from '../components/ProductCard';
 import ProductFilter from '../components/ProductFilter';
 import { Product, FilterOptions, SortOption } from '../types';
 import MainLayout from '../components/Layout/MainLayout';
-import { useProducts } from '../hooks/useApi';
+import { useDiscountedProducts } from '../hooks/useApi';
 
 const HotDeals: React.FC = () => {
-  const { products: allProducts, loading, error } = useProducts();
+  const { products: discountedProducts, loading, error } = useDiscountedProducts();
   
-  // Get sale products only
-  const saleProducts = allProducts.filter(p => p.isSale);
-  
-  // Get min and max prices from sale products
-  const allPrices = saleProducts.map(p => p.salePrice || p.price);
+  // Get min and max prices from discounted products
+  const allPrices = discountedProducts.map(p => p.salePrice || p.price);
   const minProductPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
   const maxProductPrice = allPrices.length > 0 ? Math.max(...allPrices) : 1000;
   
@@ -29,8 +26,8 @@ const HotDeals: React.FC = () => {
 
   // Update filters when products load
   useEffect(() => {
-    if (saleProducts.length > 0) {
-      const allPrices = saleProducts.map(p => p.salePrice || p.price);
+    if (discountedProducts.length > 0) {
+      const allPrices = discountedProducts.map(p => p.salePrice || p.price);
       const minPrice = Math.min(...allPrices);
       const maxPrice = Math.max(...allPrices);
       
@@ -40,10 +37,10 @@ const HotDeals: React.FC = () => {
         maxPrice: maxPrice
       }));
     }
-  }, [saleProducts.length]);
+  }, [discountedProducts.length]);
   
   useEffect(() => {
-    let result = saleProducts.filter(product => {
+    let result = discountedProducts.filter(product => {
       const productPrice = product.salePrice || product.price;
       
       // Price filter
@@ -74,7 +71,7 @@ const HotDeals: React.FC = () => {
     result = sortProducts(result, filters.sortBy);
     
     setFilteredProducts(result);
-  }, [filters, saleProducts]);
+  }, [filters, discountedProducts]);
   
   const sortProducts = (products: Product[], sortOption: SortOption): Product[] => {
     const sortedProducts = [...products];
@@ -129,7 +126,7 @@ const HotDeals: React.FC = () => {
       <MainLayout>
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
-            <p className="text-red-500 text-lg">Error loading products: {error}</p>
+            <p className="text-red-500 text-lg">Error loading discounted products: {error}</p>
           </div>
         </div>
       </MainLayout>
@@ -141,7 +138,7 @@ const HotDeals: React.FC = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-medium text-sage-800 mb-2">Hot Deals</h1>
-          <p className="text-gray-600">Shop our sale items and special offers</p>
+          <p className="text-gray-600">Shop our discounted items and special offers</p>
         </div>
         
         <div className="flex flex-col md:flex-row gap-8">
@@ -150,7 +147,7 @@ const HotDeals: React.FC = () => {
             <ProductFilter 
               onFilterChange={handleFilterChange}
               currentFilters={filters}
-              products={saleProducts}
+              products={discountedProducts}
             />
           </div>
           
@@ -158,12 +155,12 @@ const HotDeals: React.FC = () => {
           <div className="md:w-3/4">
             {filteredProducts.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No sale products found matching your criteria.</p>
+                <p className="text-gray-500 text-lg">No discounted products found matching your criteria.</p>
               </div>
             ) : (
               <>
-                <p className="text-gray-600 mb-4">{filteredProducts.length} sale products</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <p className="text-gray-600 mb-4">{filteredProducts.length} discounted products</p>
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                   {filteredProducts.map(product => (
                     <ProductCard key={product.id} product={product} />
                   ))}

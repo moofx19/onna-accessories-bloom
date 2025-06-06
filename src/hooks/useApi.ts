@@ -34,6 +34,35 @@ export function useProducts() {
   return { products, loading, error };
 }
 
+// Hook for fetching discounted products
+export function useDiscountedProducts() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDiscountedProducts = async () => {
+      try {
+        setLoading(true);
+        const apiProducts: ApiProduct[] = await apiService.products.getDiscounted();
+        const transformedProducts = apiProducts.map(transformApiProduct);
+        setProducts(transformedProducts);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch discounted products');
+        console.error('Error fetching discounted products:', err);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDiscountedProducts();
+  }, []);
+
+  return { products, loading, error };
+}
+
 // Hook for fetching a single product
 export function useProduct(id: number) {
   const [product, setProduct] = useState<Product | null>(null);
