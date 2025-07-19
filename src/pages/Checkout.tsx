@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { usePromoCodes, validatePromoCode } from '../hooks/usePromoCodes';
+import LocationSelector from '../components/LocationSelector';
 
 const Checkout: React.FC = () => {
   const { cartItems, getCartTotal, clearCart } = useCart();
@@ -24,6 +25,15 @@ const Checkout: React.FC = () => {
   const [promoCodeInput, setPromoCodeInput] = useState('');
   const [appliedPromoCode, setAppliedPromoCode] = useState<any>(null);
   const [promoError, setPromoError] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState<{
+    cityId: string | null;
+    zoneId: string | null;
+    districtId: string | null;
+  }>({
+    cityId: null,
+    zoneId: null,
+    districtId: null,
+  });
   
   const subtotal = getCartTotal();
   const promoDiscount = appliedPromoCode ? (subtotal * appliedPromoCode.discount / 100) : 0;
@@ -55,8 +65,22 @@ const Checkout: React.FC = () => {
     setPromoError('');
   };
   
+  const handleLocationChange = (location: {
+    cityId: string | null;
+    zoneId: string | null;
+    districtId: string | null;
+  }) => {
+    setSelectedLocation(location);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that location is selected
+    if (!selectedLocation.cityId || !selectedLocation.zoneId || !selectedLocation.districtId) {
+      toast('Please select your city, zone, and district');
+      return;
+    }
     
     toast('Order placed successfully!', {
       description: 'Thank you for your purchase.',
@@ -118,32 +142,11 @@ const Checkout: React.FC = () => {
                 <Input id="address" required />
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
-                  <Select>
-                    <SelectTrigger id="state" className="w-full">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AL">Alabama</SelectItem>
-                      <SelectItem value="CA">California</SelectItem>
-                      <SelectItem value="FL">Florida</SelectItem>
-                      <SelectItem value="NY">New York</SelectItem>
-                      <SelectItem value="TX">Texas</SelectItem>
-                      {/* Add other states as needed */}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zipCode">Zip Code</Label>
-                  <Input id="zipCode" required />
-                </div>
-              </div>
+              {/* Location Selector */}
+              <LocationSelector 
+                onLocationChange={handleLocationChange}
+                initialValues={selectedLocation}
+              />
               
               <Separator />
               

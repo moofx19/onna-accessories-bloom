@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { Product } from '../types';
